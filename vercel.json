@@ -5,9 +5,10 @@
     { "src": "public/**",     "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/checkout",     "dest": "/server.js" },
-    { "src": "/result",       "dest": "/server.js" },
+    { "src": "/",        "dest": "/server.js" },
+    { "src": "/checkout", "dest": "/server.js" },
+    { "src": "/result",   "dest": "/server.js" },
     { "src": "/\\.well-known/(.*)", "dest": "/public/.well-known/$1" },
-    { "src": "/(.*)",         "dest": "/public/$1" }
+    { "src": "/(.*)",     "dest": "/public/$1" }
   ]
 }
