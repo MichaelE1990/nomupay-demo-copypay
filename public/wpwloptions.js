@@ -71,7 +71,7 @@ var wpwlOptions = {
   applePay: {
     version: 3,
     checkAvailability: "applePayCapabilities",
-    merchantIdentifier: "nomupay-demo-copy-and-pay.vercel.app",
+    merchantIdentifier: "nomupay-demo-copypay.vercel.app",
     buttonSource: "js",
     buttonStyle: "white-outline",
     buttonType: "buy",
