@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' https://eu-test.oppwa.com https://p11.techlab-cdn.com;
+                 script-src 'self' https://eu-test.oppwa.com https://p11.techlab-cdn.com https://pay.google.com;
+                 style-src 'self' 'unsafe-inline' https://eu-test.oppwa.com https://eu-test.oppwa.com/v1/static;">
+  <title>NomuPay Copy&Pay</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="wpwloptions.js"></script>
+  <script
+    src="https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId={{checkoutId}}"
+    integrity="{{integrity}}"
+    crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Complete Your Payment</h1>
+    <form action="{{shopperResultUrl}}" class="paymentWidgets" data-brands="APPLEPAY GOOGLEPAY VISA MASTER"></form>
+  </div>
+</body>
+</html>
