@@ -45,6 +45,7 @@ var wpwlOptions = {
     buttonStyle: "white-outline",
     buttonType: "buy",
     displayName: "MyStore",
+    domainName: "nomupay-demo-copypay.vercel.app",
     total: getTotal(),
     currencyCode: currency,
     countryCode: "US",
