@@ -11,11 +11,8 @@
       ">
   <title>NomuPay Copy&Pay</title>
   <link rel="stylesheet" href="styles.css">
-  <script
-  async
-  src="https://pay.google.com/gp/p/js/pay.js"
-  onload="console.log('TODO: add onload function')">
-</script>
+    <script async src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"></script>
+
   <script src="wpwloptions.js"></script>
   <script
     src="https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId={{checkoutId}}"
@@ -29,3 +26,13 @@
   </div>
 </body>
 </html>
+
+<meta http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self' https://eu-test.oppwa.com https://p11.techlab-cdn.com https://pay.google.com https://applepay.cdn-apple.com https://www.gstatic.com https://fonts.googleapis.com;
+        script-src  'self' https://eu-test.oppwa.com https://p11.techlab-cdn.com https://pay.google.com https://applepay.cdn-apple.com 'unsafe-inline';
+        style-src   'self' 'unsafe-inline' https://eu-test.oppwa.com https://eu-test.oppwa.com/v1/static https://fonts.googleapis.com;
+        frame-src   'self' https://pay.google.com;
+        img-src     'self' https://www.gstatic.com data:;
+        connect-src 'self' https://eu-test.oppwa.com https://apple-pay-gateway.apple.com https://pay.google.com;
+      ">
