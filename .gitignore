@@ -13,3 +13,4 @@ certs/
 
 # macOS
 .DS_Store
+.vercel
