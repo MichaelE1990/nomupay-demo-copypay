@@ -36,9 +36,54 @@ var wpwlOptions = {
     allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
     merchantName: "Nomupay Demo",
     allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
-    buttonColor: "black",
+    buttonColor: "white",
     buttonType: "pay",
-    buttonSizeMode: "fill"
+    buttonSizeMode: "fill",
+    shippingAddressParameters: {
+      allowedCountryCodes: ["US", "IN"],
+      phoneNumberRequired: true
+    },
+    billingAddressRequired: true,
+    billingAddressParameters: {
+      format: "FULL",
+      phoneNumberRequired: true
+    },
+    shippingOptionRequired: true,
+    shippingOptionParameters: {
+      defaultSelectedOptionId: "shipping-002",
+      shippingOptions: [
+        {
+          id: "shipping-001",
+          label: "Free: Standard shipping",
+          description: "Free Shipping delivered in 5 business days."
+        },
+        {
+          id: "shipping-002",
+          label: "$1.99: Standard shipping",
+          description: "Standard shipping delivered in 3 business days."
+        },
+        {
+          id: "shipping-003",
+          label: "$10.00: Express shipping",
+          description: "Express shipping delivered in 1 business day."
+        }
+      ]
+    },
+    displayItems: [
+      { label: "Subtotal", type: "SUBTOTAL", price: "11.00" },
+      { label: "Tax", type: "TAX", price: "1.00" },
+      { label: "GST", type: "TAX", price: "1.00" }
+    ],
+    onPaymentDataChanged: function (intermediatePaymentData) {
+      return new Promise(function (resolve) {
+        resolve({});
+      });
+    },
+    onPaymentAuthorized: function (paymentData) {
+      return new Promise(function (resolve) {
+        resolve({ transactionState: "SUCCESS" });
+      });
+    }
   },
   applePay: {
     version: 3,
