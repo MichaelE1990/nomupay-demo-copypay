@@ -5,11 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <script src="https://code.jquery.com/jquery.js" type="text/javascript"></script>
   <meta http-equiv="Content-Security-Policy"
-        content="
-        default-src 'self' https://eu-test.oppwa.com https://p11.techlab-cdn.com https://cdn.example.com;
-        script-src 'self' https://cdn.example.com https://eu-test.oppwa.com https://p11.techlab-cdn.com https://pay.google.com https://applepay.cdn-apple.com;
-        style-src 'self' 'unsafe-inline' https://eu-test.oppwa.com https://eu-test.oppwa.com/v1/static;
-         img-src 'self' img.example.com;
+      content="
+        default-src 'self' https://eu-test.oppwa.com https://p11.techlab-cdn.com https://pay.google.com https://google.com/pay https://applepay.cdn-apple.com https://www.gstatic.com https://fonts.googleapis.com;
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://eu-test.oppwa.com https://p11.techlab-cdn.com https://ajax.googleapis.com https://pay.google.com https://applepay.cdn-apple.com;
+        style-src 'self' 'unsafe-inline' https://eu-test.oppwa.com/v1/static https://fonts.googleapis.com;
+        img-src 'self' https://eu-test.oppwa.com https://www.gstatic.com data:;
+        frame-src 'self' https://pay.google.com https://google.com/pay;
+        connect-src 'self' https://eu-test.oppwa.com https://apple-pay-gateway.apple.com https://pay.google.com https://google.com/pay;
+        font-src 'self' https://applepay.cdn-apple.com/jsapi/1.latest/assets https://fonts.googleapis.com https://fonts.gstatic.com;
       ">
 
   <title>NomuPay Copy&Pay</title>
@@ -25,5 +28,3 @@
   </div>
 </body>
 </html>
-
-
