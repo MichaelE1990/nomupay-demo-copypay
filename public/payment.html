@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" 
+<script src="https://code.jquery.com/jquery.js" type="text/javascript"></script>
+  <meta http-equiv="Content-Security-Policy"
         content="
           style-src   'self' https://eu-test.oppwa.com 'unsafe-inline';
           frame-src   'self' https://eu-test.oppwa.com;
@@ -11,16 +12,13 @@
           connect-src 'self' https://eu-test.oppwa.com;
           img-src     'self' https://eu-test.oppwa.com;
         ">
-  <script src="https://code.jquery.com/jquery.js" type="text/javascript"></script>
-  <script src="https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId={{checkoutId}}"></script>
-  <script nonce="{{nonce}}">
-    var wpwlOptions = {
-      style: "card"
-    };
-  </script>
+
+      
+  <title>NomuPay Copy&Pay</title>
   <link rel="stylesheet" href="styles.css">
   <script src="wpwloptions.js"></script>
-  <title>NomuPay Copy&Pay</title>
+  <script
+    src="https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId={{checkoutId}}"></script>
 </head>
 <body>
   <div class="container">
@@ -29,3 +27,4 @@
   </div>
 </body>
 </html>
+
