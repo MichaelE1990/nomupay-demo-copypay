@@ -37,7 +37,8 @@ var wpwlOptions = {
     merchantName: "Nomupay Demo",
     allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
     buttonColor: "black",
-    buttonType: "pay"
+    buttonType: "pay",
+    buttonSizeMode: "fill"
   },
   applePay: {
     version: 3,
