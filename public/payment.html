@@ -9,13 +9,13 @@
         script-src 'self' https://eu-test.oppwa.com https://p11.techlab-cdn.com https://pay.google.com https://applepay.cdn-apple.com;
         style-src 'self' 'unsafe-inline' https://eu-test.oppwa.com https://eu-test.oppwa.com/v1/static;
       ">
-       <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-   
   <title>NomuPay Copy&Pay</title>
   <link rel="stylesheet" href="styles.css">
-    <script async src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"></script>
-
+  <script
+  async
+  src="https://pay.google.com/gp/p/js/pay.js"
+  onload="console.log('TODO: add onload function')">
+</script>
   <script src="wpwloptions.js"></script>
   <script
     src="https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId={{checkoutId}}"
@@ -23,8 +23,10 @@
     crossorigin="anonymous"></script>
 </head>
 <body>
+
     <h1>Complete Your Payment</h1>
     <form action="{{shopperResultUrl}}" class="paymentWidgets" data-brands="APPLEPAY GOOGLEPAY VISA MASTER"></form>
+
 </body>
 </html>
 
