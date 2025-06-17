@@ -1,5 +1,8 @@
 // config.js
-require('dotenv').config();
+// Load local .env in non-production environments
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 module.exports = {
   ENTITY_ID:        process.env.ENTITY_ID,
