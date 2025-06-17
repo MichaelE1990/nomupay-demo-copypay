@@ -15,19 +15,20 @@
       <script src="jquery-3.7.1.min.js"></script>
   <title>NomuPay Copy&Pay</title>
   <link rel="stylesheet" href="styles.css">
-  <script
-  async
-  src="https://pay.google.com/gp/p/js/pay.js"
-  onload="console.log('TODO: add onload function')">
-</script>
+
   <script src="wpwloptions.js"></script>
   <script
     src="https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId={{checkoutId}}"></script>
 </head>
 <body>
+    <script
+    async src="https://pay.google.com/gp/p/js/pay.js"
+    onload="onGooglePayLoaded()">
+  </script>
   <div class="container">
     <h1>Complete Your Payment</h1>
     <form action="{{shopperResultUrl}}" class="paymentWidgets" data-brands="APPLEPAY GOOGLEPAY VISA MASTER"></form>
   </div>
 </body>
 </html>
+
