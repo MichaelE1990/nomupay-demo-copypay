@@ -1,8 +1,3 @@
-// Base configuration for all Google Pay payment data requests
-const baseGooglePayRequest = {
-  apiVersion: 2,
-  apiVersionMinor: 0
-};
 var subTotalAmount = 7731;   // in minor currency units (e.g. cents)
 var shippingAmount = 0;
 var taxAmount = 1469;
@@ -35,15 +30,13 @@ var wpwlOptions = {
     submit: "Process Payment"
   },
   googlePay: {
-    // Use the base Google Pay request configuration
-    baseRequest: baseGooglePayRequest,
     merchantId: "BCR2DN4TTWM4FDYB",
     gatewayMerchantId: "8ac7a4c781a732090181aaf9f6fc15d4",
     gateway: "aciworldwide",
     allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
     merchantName: "Nomupay Demo",
     allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
-    buttonColor: "black",
+    buttonColor: "white",
     buttonType: "pay",
     shippingAddressParameters: {
       allowedCountryCodes: ["US", "IN"],
