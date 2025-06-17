@@ -1,8 +1,7 @@
 # Node modules
 node_modules/
 
-# Local credential and config files
-config.js
+# Local credential files
 .env
 
 # Vercel directory
