@@ -1,12 +1,13 @@
 # Node modules
 node_modules/
 
-# Local credential files
+# Local environment files
 .env
+.env.local
 
 # Vercel directory
 .vercel/
-   
+
 # SSL certs
 certs/
 
