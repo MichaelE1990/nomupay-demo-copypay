@@ -23,9 +23,16 @@
 </head>
 <body>
     <script
-    async src="https://pay.google.com/gp/p/js/pay.js"
-    onload="onGooglePayLoaded()">
-  </script>
+      async src="https://pay.google.com/gp/p/js/pay.js"
+      onload="initGooglePay()"
+    ></script>
+    <script nonce="{{nonce}}">
+      function initGooglePay() {
+        // Initialize Google Pay PaymentsClient in TEST environment
+        window.paymentsClient = new google.payments.api.PaymentsClient({ environment: 'TEST' });
+        console.log('Google Pay initialized:', window.paymentsClient);
+      }
+    </script>
   <div class="container">
     <h1>Complete Your Payment</h1>
     <form action="{{shopperResultUrl}}" class="paymentWidgets" data-brands="APPLEPAY GOOGLEPAY VISA MASTER"></form>
