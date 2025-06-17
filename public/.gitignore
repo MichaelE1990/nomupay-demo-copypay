@@ -1,9 +1,0 @@
-# dependencies
-node_modules/
-
-# local env or certs
-certs/
-.env
-
-# macOS
-.DS_Store

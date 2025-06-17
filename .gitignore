@@ -1,1 +1,15 @@
-.vercel
+# Node modules
+node_modules/
+
+# Local credential and config files
+config.js
+.env
+
+# Vercel directory
+.vercel/
+   
+# SSL certs
+certs/
+
+# macOS
+.DS_Store
