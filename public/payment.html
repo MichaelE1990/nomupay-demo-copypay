@@ -3,18 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<script src="https://code.jquery.com/jquery.js" type="text/javascript"></script>
-  <meta http-equiv="Content-Security-Policy"
+  <meta http-equiv="Content-Security-Policy" 
         content="
-        default-src 'self' https://eu-test.oppwa.com https://p11.techlab-cdn.com;
-        script-src 'self' https://eu-test.oppwa.com https://p11.techlab-cdn.com https://pay.google.com https://applepay.cdn-apple.com;
-        style-src 'self' 'unsafe-inline' https://eu-test.oppwa.com https://eu-test.oppwa.com/v1/static;
-      ">
-  <title>NomuPay Copy&Pay</title>
+          style-src   'self' https://eu-test.oppwa.com 'unsafe-inline';
+          frame-src   'self' https://eu-test.oppwa.com;
+          script-src  'self' https://eu-test.oppwa.com 'nonce-{{nonce}}';
+          connect-src 'self' https://eu-test.oppwa.com;
+          img-src     'self' https://eu-test.oppwa.com;
+        ">
+  <script src="https://code.jquery.com/jquery.js" type="text/javascript"></script>
+  <script src="https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId={{checkoutId}}"></script>
+  <script nonce="{{nonce}}">
+    var wpwlOptions = {
+      style: "card"
+    };
+  </script>
   <link rel="stylesheet" href="styles.css">
   <script src="wpwloptions.js"></script>
-  <script
-    src="https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId={{checkoutId}}"></script>
+  <title>NomuPay Copy&Pay</title>
 </head>
 <body>
   <div class="container">
@@ -23,5 +29,3 @@
   </div>
 </body>
 </html>
-
-
