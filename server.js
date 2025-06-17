@@ -1,14 +1,9 @@
+require('dotenv').config();
 const express     = require('express');
 const https       = require('https');
 const querystring = require('querystring');
 const fs          = require('fs');
 const path        = require('path');
-
-// Load local .env in non-production environments
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
-
 const {
   ENTITY_ID,
   ACCESS_TOKEN,
