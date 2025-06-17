@@ -43,9 +43,8 @@ var wpwlOptions = {
     allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
     merchantName: "Nomupay Demo",
     allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
-    buttonColor: "white",
+    buttonColor: "black",
     buttonType: "pay",
-    buttonSizeMode: "fill",
     shippingAddressParameters: {
       allowedCountryCodes: ["US", "IN"],
       phoneNumberRequired: true
