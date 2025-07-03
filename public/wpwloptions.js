@@ -79,10 +79,26 @@ var wpwlOptions = {
       });
     },
     onPaymentAuthorized: function (paymentData) {
+      console.log("onPaymentAuthorized:", paymentData);
       return new Promise(function (resolve) {
-        resolve({ transactionState: "SUCCESS" });
+        // Toggle simulateError to true to simulate an error response in test environment
+        var simulateError = false; // set to true to test error flow
+        if (!simulateError) {
+          // Simulate success response
+          resolve({ transactionState: 'SUCCESS' });
+        } else {
+          // Simulate error response
+          resolve({
+            transactionState: 'ERROR',
+            error: {
+              reason: "PAYMENT_DATA_INVALID",
+              message: "Simulated error: invalid payment data",
+              intent: "PAYMENT_AUTHORIZATION"
+            }
+          });
+        }
       });
-    }
+    },
   },
   applePay: {
     version: 3,
