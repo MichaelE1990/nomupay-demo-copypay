@@ -81,19 +81,20 @@ var wpwlOptions = {
     onPaymentAuthorized: function (paymentData) {
       console.log("onPaymentAuthorized:", paymentData);
       return new Promise(function (resolve) {
-        // Toggle simulateError to true to simulate an error response in test environment
-        var simulateError = false; // set to true to test error flow
-        if (!simulateError) {
-          // Simulate success response
+        var brand = (paymentData.paymentMethodData &&
+                     paymentData.paymentMethodData.info &&
+                     paymentData.paymentMethodData.info.cardNetwork) || '';
+        if (brand.toUpperCase() === 'MASTERCARD') {
+          // Allow Mastercard payments
           resolve({ transactionState: 'SUCCESS' });
         } else {
-          // Simulate error response
+          // Reject all other card networks
           resolve({
             transactionState: 'ERROR',
             error: {
-              reason: "PAYMENT_DATA_INVALID",
-              message: "Simulated error: invalid payment data",
-              intent: "PAYMENT_AUTHORIZATION"
+              reason: 'PAYMENT_DATA_INVALID',
+              message: 'Only Mastercard payments are accepted in this test environment',
+              intent: 'PAYMENT_AUTHORIZATION'
             }
           });
         }
