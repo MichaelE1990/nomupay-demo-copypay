@@ -109,7 +109,7 @@ var wpwlOptions = {
       }
     });
   }
-}
+}},
   applePay: {
     version: 3,
     checkAvailability: "applePayCapabilities",
