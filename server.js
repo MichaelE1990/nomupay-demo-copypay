@@ -92,12 +92,12 @@ app.get('/checkout', async (req, res) => {
     const prep = await prepareCheckout(amount, currency);
     console.log('prepareCheckout response:', JSON.stringify(prep, null, 2));
     const { id: checkoutId, integrity } = prep;
-    const fullResultUrl = `${req.protocol}://${req.get('host')}${SHOPPER_RESULT_URL}`;
+    const fullResultUrl = SHOPPER_RESULT_URL;
     let html = fs.readFileSync(path.join(__dirname, 'public', 'payment.html'), 'utf8');
 html = html
   .replace(/{{checkoutId}}/g, checkoutId)
   .replace(/{{integrity}}/g, integrity)
-  .replace(/{{shopperResultUrl}}/g, fullResultUrl)
+  //.replace(/{{shopperResultUrl}}/g, fullResultUrl) // removed as per instructions
   .replace(/{{apiHost}}/g, API_HOST);
     res.send(html);
   } catch (err) {
