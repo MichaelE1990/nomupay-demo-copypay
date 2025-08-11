@@ -131,6 +131,14 @@ var wpwlOptions = {
     onCancel: function() {
       console.log("onCancel");
     },
+    onShippingMethodSelected: function(shippingMethod) {
+      console.log("onShippingMethodSelected:", shippingMethod);
+      shippingAmount = (shippingMethod.identifier === "free") ? 0 : 500;
+      return {
+        newTotal: getTotal(),
+        newLineItems: getLineItems()
+      };
+    },
     onPaymentAuthorized: function(payment) {
       console.log("onPaymentAuthorized:", payment);
       // Return SUCCESS or FAILURE
