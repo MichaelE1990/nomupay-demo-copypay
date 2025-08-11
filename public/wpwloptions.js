@@ -1,4 +1,5 @@
-var subTotalAmount = 10;   // 0.10 EUR in minor currency units (cents)
+// amounts in minor units (pence)
+var subTotalAmount = 10;  // £0.10
 var shippingAmount = 0;
 var taxAmount = 0;
 var currency = "GBP";
@@ -7,15 +8,9 @@ var applePayTotalLabel = "COMPANY, INC.";
 function getAmount() {
   return ((subTotalAmount + shippingAmount + taxAmount) / 100).toFixed(2);
 }
-
 function getTotal() {
-  return {
-    // Business name, appears on the payment sheet and card statement
-    label: applePayTotalLabel,
-    amount: getAmount()
-  };
+  return { label: applePayTotalLabel, amount: getAmount() };
 }
-
 function getLineItems() {
   return [
     { label: "Subtotal", amount: (subTotalAmount / 100).toFixed(2) },
@@ -23,7 +18,6 @@ function getLineItems() {
     { label: "Tax", amount: (taxAmount / 100).toFixed(2) }
   ];
 }
-
 var wpwlOptions = {
   style: "plain",
   labels: {
