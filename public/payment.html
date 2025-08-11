@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<script src="https://code.jquery.com/jquery.js" type="text/javascript"></script>
+  <script src="https://code.jquery.com/jquery.js" type="text/javascript"></script>
   <meta http-equiv="Content-Security-Policy"
       content="
-        default-src 'self' https://eu-test.oppwa.com https://p11.techlab-cdn.com https://pay.google.com https://google.com/pay https://applepay.cdn-apple.com https://www.gstatic.com https://fonts.googleapis.com;
-        script-src  'self' 'unsafe-inline' 'unsafe-eval' https://eu-test.oppwa.com https://p11.techlab-cdn.com https://ajax.googleapis.com https://pay.google.com https://applepay.cdn-apple.com;
-        style-src   'self' 'unsafe-inline' https://eu-test.oppwa.com https://eu-test.oppwa.com/v1/static https://fonts.googleapis.com;
-        img-src     'self' https://eu-test.oppwa.com https://www.gstatic.com data:;
-        frame-src   'self' https://eu-test.oppwa.com/v1/widgetDataIframe https://eu-test.oppwa.com https://pay.google.com https://google.com/pay;
-        connect-src 'self' https://eu-test.oppwa.com https://apple-pay-gateway.apple.com https://pay.google.com https://google.com/pay;
+        default-src 'self' https://eu-prod.oppwa.com https://p11.techlab-cdn.com https://pay.google.com https://google.com/pay https://applepay.cdn-apple.com https://www.gstatic.com https://fonts.googleapis.com;
+        script-src  'self' 'unsafe-inline' 'unsafe-eval' https://eu-prod.oppwa.com https://p11.techlab-cdn.com https://ajax.googleapis.com https://pay.google.com https://applepay.cdn-apple.com;
+        style-src   'self' 'unsafe-inline' https://eu-prod.oppwa.com https://eu-prod.oppwa.com/v1/static https://fonts.googleapis.com;
+        img-src     'self' https://eu-prod.oppwa.com https://www.gstatic.com data:;
+        frame-src   'self' https://eu-prod.oppwa.com/v1/widgetDataIframe https://eu-prod.oppwa.com https://pay.google.com https://google.com/pay;
+        connect-src 'self' https://eu-prod.oppwa.com https://apple-pay-gateway.apple.com https://pay.google.com https://google.com/pay;
         font-src    'self' https://applepay.cdn-apple.com/jsapi/1.latest/assets https://fonts.googleapis.com https://fonts.gstatic.com;
       ">
 
@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="styles.css">
   <script src="wpwloptions.js"></script>
   <script
-    src="https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId={{checkoutId}}"></script>
+    src="https://eu-prod.oppwa.com/v1/paymentWidgets.js?checkoutId={{checkoutId}}"></script>
 </head>
 <body>
   <div class="container">
@@ -27,4 +27,3 @@
     <form action="{{shopperResultUrl}}" class="paymentWidgets" data-brands="APPLEPAY GOOGLEPAY VISA MASTER"></form>
   </div>
 </body>
-</html>
