@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 
-function prepareCheckout(amount = '0.00', currency = 'GBP') {
+function prepareCheckout(amount = '0.01', currency = 'GBP') {
   const postData = querystring.stringify({
     entityId: ENTITY_ID,
     amount,
