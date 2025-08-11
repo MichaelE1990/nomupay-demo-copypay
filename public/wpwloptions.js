@@ -112,7 +112,7 @@ var wpwlOptions = {
     domainName: "nomupay-demo-copypay.vercel.app",
     total: getTotal(),
     currencyCode: currency,
-    countryCode: "UK",
+    countryCode: "GB",
     merchantCapabilities: ["supports3DS"],
     supportedNetworks: ["amex", "discover", "masterCard", "visa"],
     lineItems: getLineItems(),
