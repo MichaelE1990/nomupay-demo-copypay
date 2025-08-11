@@ -94,10 +94,11 @@ app.get('/checkout', async (req, res) => {
     const { id: checkoutId, integrity } = prep;
     const fullResultUrl = `${req.protocol}://${req.get('host')}${SHOPPER_RESULT_URL}`;
     let html = fs.readFileSync(path.join(__dirname, 'public', 'payment.html'), 'utf8');
-    html = html
-      .replace(/{{checkoutId}}/g, checkoutId)
-      .replace(/{{integrity}}/g, integrity)
-      .replace(/{{shopperResultUrl}}/g, fullResultUrl);
+html = html
+  .replace(/{{checkoutId}}/g, checkoutId)
+  .replace(/{{integrity}}/g, integrity)
+  .replace(/{{shopperResultUrl}}/g, fullResultUrl)
+  .replace(/{{apiHost}}/g, API_HOST); // <-- add this
     res.send(html);
   } catch (err) {
     console.error('Error preparing checkout:', err);
