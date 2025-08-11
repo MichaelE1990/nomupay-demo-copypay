@@ -131,7 +131,7 @@ var wpwlOptions = {
       }
     ],
     shippingType: "shipping",
-    supportedCountries: ["UK"],
+    supportedCountries: ["GB"],
     requiredShippingContactFields: ["postalAddress", "email"],
     requiredBillingContactFields: ["postalAddress"],
     onCancel: function() {
