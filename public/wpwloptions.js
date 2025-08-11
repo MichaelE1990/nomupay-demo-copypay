@@ -131,14 +131,6 @@ var wpwlOptions = {
     onCancel: function() {
       console.log("onCancel");
     },
-    onPaymentMethodSelected: function(paymentMethod) {
-      console.log("onPaymentMethodSelected:", paymentMethod.type);
-      subTotalAmount = (["debit", "credit"].includes(paymentMethod.type)) ? 7731 : 7431;
-      return {
-        newTotal: getTotal(),
-        newLineItems: getLineItems()
-      };
-    },
     onShippingContactSelected: function(shippingContact) {
       console.log("onShippingContactSelected:", shippingContact);
       taxAmount = (shippingContact.administrativeArea === "FL") ? 1269 : 1469;
