@@ -131,22 +131,6 @@ var wpwlOptions = {
     onCancel: function() {
       console.log("onCancel");
     },
-    onShippingContactSelected: function(shippingContact) {
-      console.log("onShippingContactSelected:", shippingContact);
-      taxAmount = (shippingContact.administrativeArea === "FL") ? 1269 : 1469;
-      var update = {
-        newTotal: getTotal(),
-        newLineItems: getLineItems()
-      };
-      if (shippingContact.postalCode === "95014") {
-        update.errors = [{
-          code: "shippingContactInvalid",
-          contactField: "postalCode",
-          message: "ZIP Code is invalid"
-        }];
-      }
-      return update;
-    },
     onPaymentAuthorized: function(payment) {
       console.log("onPaymentAuthorized:", payment);
       // Return SUCCESS or FAILURE
