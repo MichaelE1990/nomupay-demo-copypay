@@ -98,7 +98,7 @@ html = html
   .replace(/{{checkoutId}}/g, checkoutId)
   .replace(/{{integrity}}/g, integrity)
   .replace(/{{shopperResultUrl}}/g, fullResultUrl)
-  .replace(/{{apiHost}}/g, API_HOST); // <-- add this
+  .replace(/{{apiHost}}/g, API_HOST);
     res.send(html);
   } catch (err) {
     console.error('Error preparing checkout:', err);
