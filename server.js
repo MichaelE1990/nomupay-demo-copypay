@@ -6,7 +6,6 @@ const path        = require('path');
 const {
   ENTITY_ID,
   ACCESS_TOKEN,
-  API_HOST,
   SHOPPER_RESULT_URL
 } = require('./config');
 
@@ -26,7 +25,7 @@ function prepareCheckout(amount = '0.01', currency = 'GBP') {
   });
 
   const options = {
-    hostname: API_HOST,
+    hostname: 'eu-prod.oppwa.com',
     port: 443,
     path: '/v1/checkouts',
     method: 'POST',
@@ -60,7 +59,7 @@ function getPaymentStatus(resourcePath) {
   return new Promise((resolve, reject) => {
     const pathWithQuery = `${resourcePath}?entityId=${ENTITY_ID}`;
     const options = {
-      hostname: API_HOST,
+      hostname: 'eu-prod.oppwa.com',
       port: 443,
       path: pathWithQuery,
       method: 'GET',
@@ -98,7 +97,7 @@ html = html
   .replace(/{{checkoutId}}/g, checkoutId)
   .replace(/{{integrity}}/g, integrity)
   //.replace(/{{shopperResultUrl}}/g, fullResultUrl) // removed as per instructions
-  .replace(/{{apiHost}}/g, API_HOST);
+  .replace(/{{apiHost}}/g, 'eu-prod.oppwa.com');
     res.send(html);
   } catch (err) {
     console.error('Error preparing checkout:', err);
