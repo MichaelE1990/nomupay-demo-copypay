@@ -1,7 +1,7 @@
-var subTotalAmount = 7731;   // in minor currency units (e.g. cents)
+var subTotalAmount = 10;   // 0.10 EUR in minor currency units (cents)
 var shippingAmount = 0;
-var taxAmount = 1469;
-var currency = "EUR";
+var taxAmount = 0;
+var currency = "GBP";
 var applePayTotalLabel = "COMPANY, INC.";
 
 function getAmount() {
@@ -112,7 +112,7 @@ var wpwlOptions = {
     domainName: "nomupay-demo-copypay.vercel.app",
     total: getTotal(),
     currencyCode: currency,
-    countryCode: "US",
+    countryCode: "UK",
     merchantCapabilities: ["supports3DS"],
     supportedNetworks: ["amex", "discover", "masterCard", "visa"],
     lineItems: getLineItems(),
@@ -131,7 +131,7 @@ var wpwlOptions = {
       }
     ],
     shippingType: "shipping",
-    supportedCountries: ["US"],
+    supportedCountries: ["UK"],
     requiredShippingContactFields: ["postalAddress", "email"],
     requiredBillingContactFields: ["postalAddress"],
     onCancel: function() {
