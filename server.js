@@ -6,8 +6,7 @@ const path        = require('path');
 const {
   ENTITY_ID,
   ACCESS_TOKEN,
-  API_HOST,
-  SHOPPER_RESULT_URL
+  API_HOST
 } = require('./config');
 
 
@@ -92,12 +91,10 @@ app.get('/checkout', async (req, res) => {
     const prep = await prepareCheckout(amount, currency);
     console.log('prepareCheckout response:', JSON.stringify(prep, null, 2));
     const { id: checkoutId, integrity } = prep;
-    const fullResultUrl = `${req.protocol}://${req.get('host')}${SHOPPER_RESULT_URL}`;
     let html = fs.readFileSync(path.join(__dirname, 'public', 'payment.html'), 'utf8');
     html = html
       .replace(/{{checkoutId}}/g, checkoutId)
-      .replace(/{{integrity}}/g, integrity)
-      .replace(/{{shopperResultUrl}}/g, fullResultUrl);
+      .replace(/{{integrity}}/g, integrity);
     res.send(html);
   } catch (err) {
     console.error('Error preparing checkout:', err);
