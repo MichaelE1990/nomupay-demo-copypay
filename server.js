@@ -9,13 +9,12 @@ const {
   API_HOST
 } = require('./config');
 
-
 const app  = express();
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 
-function prepareCheckout(amount = '0.00', currency = 'GBP') {
+function prepareCheckout(amount, currency) {
   const postData = querystring.stringify({
     entityId: ENTITY_ID,
     amount,
@@ -54,7 +53,26 @@ function prepareCheckout(amount = '0.00', currency = 'GBP') {
   });
 }
 
-// Step 3: retrieve payment status
+app.get('/checkout', async (req, res) => {
+  const amount   = req.query.amount   || '10.00';
+  const currency = req.query.currency || 'GBP';
+
+  try {
+    const prep = await prepareCheckout(amount, currency);
+    console.log('prepareCheckout response:', JSON.stringify(prep, null, 2));
+    const { id: checkoutId, integrity } = prep;
+    let html = fs.readFileSync(path.join(__dirname, 'public', 'payment.html'), 'utf8');
+    html = html
+      .replace(/{{checkoutId}}/g, checkoutId)
+      .replace(/{{integrity}}/g, integrity);
+    res.send(html);
+  } catch (err) {
+    console.error('Error preparing checkout:', err);
+    res.status(500).send('Could not initialize payment.');
+  }
+});
+
+// retrieve payment status
 function getPaymentStatus(resourcePath) {
   return new Promise((resolve, reject) => {
     const pathWithQuery = `${resourcePath}?entityId=${ENTITY_ID}`;
@@ -83,26 +101,6 @@ function getPaymentStatus(resourcePath) {
   });
 }
 
-app.get('/checkout', async (req, res) => {
-  const amount   = req.query.amount   || '10.00';
-  const currency = req.query.currency || 'GBP';
-
-  try {
-    const prep = await prepareCheckout(amount, currency);
-    console.log('prepareCheckout response:', JSON.stringify(prep, null, 2));
-    const { id: checkoutId, integrity } = prep;
-    let html = fs.readFileSync(path.join(__dirname, 'public', 'payment.html'), 'utf8');
-    html = html
-      .replace(/{{checkoutId}}/g, checkoutId)
-      .replace(/{{integrity}}/g, integrity);
-    res.send(html);
-  } catch (err) {
-    console.error('Error preparing checkout:', err);
-    res.status(500).send('Could not initialize payment.');
-  }
-});
-
-// Handle redirect and fetch payment status
 app.get('/result', async (req, res) => {
   const resourcePath = req.query.resourcePath;
   if (!resourcePath) {
@@ -122,11 +120,6 @@ app.get('/result', async (req, res) => {
     console.error('Error fetching payment status:', err);
     res.status(500).send('Could not fetch payment status.');
   }
-});
-
-// Redirect root to the checkout page with default values
-app.get('/', (req, res) => {
-  res.redirect('/checkout?amount=10.00&currency=GBP');
 });
 
 module.exports = app;
