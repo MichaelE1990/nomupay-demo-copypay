@@ -10,6 +10,7 @@ const {
   SHOPPER_RESULT_URL
 } = require('./config');
 
+
 const app  = express();
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -129,10 +130,6 @@ app.get('/result', async (req, res) => {
 // Redirect root to the checkout page with default values
 app.get('/', (req, res) => {
   res.redirect('/checkout?amount=10.00&currency=GBP');
-});
-
-app.listen(PORT, () => {
-  console.log(`Server listening at http://localhost:${PORT}`);
 });
 
 module.exports = app;
