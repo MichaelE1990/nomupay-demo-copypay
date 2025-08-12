@@ -122,4 +122,9 @@ app.get('/result', async (req, res) => {
   }
 });
 
+// Redirect root to the checkout page with test values
+app.get('/', (req, res) => {
+  res.redirect('/checkout');
+});
+
 module.exports = app;
