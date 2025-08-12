@@ -3,14 +3,10 @@ const https       = require('https');
 const querystring = require('querystring');
 const fs          = require('fs');
 const path        = require('path');
-const {
-  ENTITY_ID,
-  ACCESS_TOKEN,
-  SHOPPER_RESULT_URL
-} = require('./config');
+const { API_HOST, ENTITY_ID, ACCESS_TOKEN, SHOPPER_RESULT_URL } = require('./config');
 
 const app  = express();
-const PORT = process.env.PORT || 3000;
+
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
@@ -25,7 +21,7 @@ function prepareCheckout(amount = '0.01', currency = 'GBP') {
   });
 
   const options = {
-    hostname: 'eu-prod.oppwa.com',
+    hostname: API_HOST,
     port: 443,
     path: '/v1/checkouts',
     method: 'POST',
@@ -59,7 +55,7 @@ function getPaymentStatus(resourcePath) {
   return new Promise((resolve, reject) => {
     const pathWithQuery = `${resourcePath}?entityId=${ENTITY_ID}`;
     const options = {
-      hostname: 'eu-prod.oppwa.com',
+      hostname: API_HOST,
       port: 443,
       path: pathWithQuery,
       method: 'GET',
@@ -91,13 +87,13 @@ app.get('/checkout', async (req, res) => {
     const prep = await prepareCheckout(amount, currency);
     console.log('prepareCheckout response:', JSON.stringify(prep, null, 2));
     const { id: checkoutId, integrity } = prep;
-    const fullResultUrl = SHOPPER_RESULT_URL;
+    const fullResultUrl = `${req.protocol}://${req.get('host')}${SHOPPER_RESULT_URL}`;
     let html = fs.readFileSync(path.join(__dirname, 'public', 'payment.html'), 'utf8');
 html = html
   .replace(/{{checkoutId}}/g, checkoutId)
   .replace(/{{integrity}}/g, integrity)
-  //.replace(/{{shopperResultUrl}}/g, fullResultUrl) // removed as per instructions
-  .replace(/{{apiHost}}/g, 'eu-prod.oppwa.com');
+  .replace(/{{shopperResultUrl}}/g, fullResultUrl)
+  .replace(/{{apiHost}}/g, API_HOST); // <-- add this
     res.send(html);
   } catch (err) {
     console.error('Error preparing checkout:', err);
@@ -132,6 +128,4 @@ app.get('/', (req, res) => {
   res.redirect('/checkout?amount=10.00&currency=GBP');
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listening at http://localhost:${PORT}`);
-});
+module.exports = app;
