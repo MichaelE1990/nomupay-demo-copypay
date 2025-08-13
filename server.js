@@ -52,21 +52,26 @@ function getPaymentStatus(resourcePath) {
     headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
   }).then(r => r.json());
 }
-
-app.get('/result', async (req, res) => {
-  const resourcePath = req.query.resourcePath;
-  if (!resourcePath) {
-    return res.status(400).send('Missing resourcePath query parameter.');
-  }
-
-  try {
-    const status = await getPaymentStatus(resourcePath);
-    res.json(status);
-  } catch (_) {
-    res.status(500).send('Could not fetch payment status.');
-  }
+// Serve paymentresult.html when redirected after payment
+app.get('/result', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'paymentresult.html'));
 });
 
-app.get('/', (req, res) => res.redirect('/checkout'));
+// New API route to get payment status
+app.get('/status', async (req, res) => {
+  const resourcePath = req.query.resourcePath;
+  if (!resourcePath) return res.status(400).json({ error: 'Missing resourcePath' });
 
-module.exports = app;
+  try {
+    const rp = String(resourcePath).replace(/^\/+/, '');
+    const url = BASE + rp + `?entityId=${encodeURIComponent(ENTITY_ID)}`;
+
+    const status = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+    }).then(r => r.json());
+
+    res.json(status);
+  } catch (err) {
+    res.status(500).json({ error: 'Could not fetch payment status' });
+  }
+});
