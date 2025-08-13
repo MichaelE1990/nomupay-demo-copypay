@@ -3,6 +3,7 @@ const express = require('express');
 const fs      = require('fs');
 const path    = require('path');
 const { ENTITY_ID, ACCESS_TOKEN, API_HOST } = require('./config');
+
 const app  = express();
 
 // Serve static files
@@ -52,26 +53,25 @@ function getPaymentStatus(resourcePath) {
     headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
   }).then(r => r.json());
 }
-// Serve paymentresult.html when redirected after payment
+
+// Serve the confirmation page (client JS will call /status)
 app.get('/result', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'paymentresult.html'));
 });
 
-// New API route to get payment status
+// API for the confirmation page to fetch status (Step 3)
 app.get('/status', async (req, res) => {
   const resourcePath = req.query.resourcePath;
   if (!resourcePath) return res.status(400).json({ error: 'Missing resourcePath' });
 
   try {
-    const rp = String(resourcePath).replace(/^\/+/, '');
-    const url = BASE + rp + `?entityId=${encodeURIComponent(ENTITY_ID)}`;
-
-    const status = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
-    }).then(r => r.json());
-
+    const status = await getPaymentStatus(resourcePath);
     res.json(status);
-  } catch (err) {
+  } catch (_) {
     res.status(500).json({ error: 'Could not fetch payment status' });
   }
 });
+
+app.get('/', (req, res) => res.redirect('/checkout'));
+
+module.exports = app;
