@@ -55,20 +55,13 @@ function getPaymentStatus(resourcePath) {
 
 app.get('/result', async (req, res) => {
   const resourcePath = req.query.resourcePath;
-  if (!resourcePath) return res.status(400).send('Missing resourcePath query parameter.');
+  if (!resourcePath) {
+    return res.status(400).send('Missing resourcePath query parameter.');
+  }
 
   try {
     const status = await getPaymentStatus(resourcePath);
-
-    let html = fs.readFileSync(path.join(__dirname, 'public', 'paymentresult.html'), 'utf8');
-    html = html
-      .replace(/{{statusCode}}/g,        status?.result?.code || '')
-      .replace(/{{statusDescription}}/g, status?.result?.description || '')
-      .replace(/{{paymentBrand}}/g,      status?.paymentBrand || '')
-      .replace(/{{amount}}/g,            status?.amount || '')
-      .replace(/{{currency}}/g,          status?.currency || '');
-
-    res.send(html);
+    res.json(status); // Send the raw API response directly
   } catch (_) {
     res.status(500).send('Could not fetch payment status.');
   }

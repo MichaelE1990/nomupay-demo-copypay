@@ -1,36 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>Payment Result</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy"
+        content="
+          default-src 'self';
+          style-src   'self' https://eu-prod.oppwa.com 'unsafe-inline';
+          frame-src   'self' https://eu-prod.oppwa.com https://pay.google.com https://applepay.cdn-apple.com;
+          script-src  'self' https://eu-prod.oppwa.com https://pay.google.com https://applepay.cdn-apple.com;
+          connect-src 'self' https://eu-prod.oppwa.com https://apple-pay-gateway.apple.com https://pay.google.com;
+          img-src     'self' https://eu-prod.oppwa.com https://www.gstatic.com https://applepay.cdn-apple.com data:;
+          font-src    'self' https://applepay.cdn-apple.com https://fonts.googleapis.com https://fonts.gstatic.com;
+        ">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
     <h1>Payment Result</h1>
-    <pre id="result">Loading...</pre>
+    <p><strong>Status Code:</strong> {{statusCode}}</p>
+    <p><strong>Description:</strong> {{statusDescription}}</p>
+    <p><strong>Brand:</strong> {{paymentBrand}}</p>
+    <p><strong>Amount:</strong> {{amount}} {{currency}}</p>
   </div>
-
-  <script>
-    async function fetchResult() {
-      const params = new URLSearchParams(window.location.search);
-      const resourcePath = params.get('resourcePath');
-      if (!resourcePath) {
-        document.getElementById('result').textContent = 'No resourcePath found.';
-        return;
-      }
-
-      try {
-        const res = await fetch(`/status?resourcePath=${encodeURIComponent(resourcePath)}`);
-        const data = await res.json();
-        document.getElementById('result').textContent = JSON.stringify(data, null, 2);
-      } catch (err) {
-        document.getElementById('result').textContent = 'Error fetching payment status.';
-      }
-    }
-
-    fetchResult();
-  </script>
 </body>
 </html>
