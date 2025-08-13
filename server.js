@@ -60,11 +60,10 @@ app.get('/checkout', async (req, res) => {
   try {
     const prep = await prepareCheckout(amount, currency);
     console.log('prepareCheckout response:', JSON.stringify(prep, null, 2));
-    const { id: checkoutId, integrity } = prep;
+    const { id: checkoutId } = prep;
     let html = fs.readFileSync(path.join(__dirname, 'public', 'payment.html'), 'utf8');
     html = html
-      .replace(/{{checkoutId}}/g, checkoutId)
-      .replace(/{{integrity}}/g, integrity);
+      .replace(/{{checkoutId}}/g, checkoutId);
     res.send(html);
   } catch (err) {
     console.error('Error preparing checkout:', err);
