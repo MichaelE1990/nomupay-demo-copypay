@@ -9,7 +9,7 @@ const {
   API_HOST
 } = require('./config');
 
-const app  = express();
+const app = express();
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
@@ -61,9 +61,10 @@ app.get('/checkout', async (req, res) => {
     const prep = await prepareCheckout(amount, currency);
     console.log('prepareCheckout response:', JSON.stringify(prep, null, 2));
     const { id: checkoutId } = prep;
+
     let html = fs.readFileSync(path.join(__dirname, 'public', 'payment.html'), 'utf8');
-    html = html
-      .replace(/{{checkoutId}}/g, checkoutId);
+    html = html.replace(/{{checkoutId}}/g, checkoutId);
+
     res.send(html);
   } catch (err) {
     console.error('Error preparing checkout:', err);
@@ -71,7 +72,6 @@ app.get('/checkout', async (req, res) => {
   }
 });
 
-// retrieve payment status
 function getPaymentStatus(resourcePath) {
   return new Promise((resolve, reject) => {
     const pathWithQuery = `${resourcePath}?entityId=${ENTITY_ID}`;
@@ -84,6 +84,7 @@ function getPaymentStatus(resourcePath) {
         'Authorization': `Bearer ${ACCESS_TOKEN}`
       }
     };
+
     const req = https.request(options, res => {
       let data = '';
       res.on('data', chunk => data += chunk);
@@ -105,15 +106,18 @@ app.get('/result', async (req, res) => {
   if (!resourcePath) {
     return res.status(400).send('Missing resourcePath query parameter.');
   }
+
   try {
     const statusResponse = await getPaymentStatus(resourcePath);
+
     let html = fs.readFileSync(path.join(__dirname, 'public', 'paymentresult.html'), 'utf8');
     html = html
-      .replace(/{{statusCode}}/g, statusResponse.result.code || '')
-      .replace(/{{statusDescription}}/g, statusResponse.result.description || '')
+      .replace(/{{statusCode}}/g, statusResponse?.result?.code || '')
+      .replace(/{{statusDescription}}/g, statusResponse?.result?.description || '')
       .replace(/{{paymentBrand}}/g, statusResponse.paymentBrand || '')
       .replace(/{{amount}}/g, statusResponse.amount || '')
       .replace(/{{currency}}/g, statusResponse.currency || '');
+
     res.send(html);
   } catch (err) {
     console.error('Error fetching payment status:', err);
@@ -121,7 +125,6 @@ app.get('/result', async (req, res) => {
   }
 });
 
-// Redirect root to the checkout page with test values
 app.get('/', (req, res) => {
   res.redirect('/checkout');
 });
