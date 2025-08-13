@@ -1,24 +1,24 @@
-// server
+// server.js
 const express = require('express');
-const fs      = require('fs');
-const path    = require('path');
+const fs = require('fs');
+const path = require('path');
+const fetch = require('node-fetch'); // If you're on Node < 18
 const { ENTITY_ID, ACCESS_TOKEN, API_HOST } = require('./config');
 
-const app  = express();
-
-// Serve static files
+const app = express();
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Utilities
-const BASE = 'https://' + String(API_HOST).replace(/\/?$/, '/');
+// API base
+const BASE = `https://${String(API_HOST).replace(/\/?$/, '/')}`;
 
+// Step 1 – Prepare checkout
 function prepareCheckout() {
   const body = new URLSearchParams({
-    entityId:    ENTITY_ID,
-    amount:      '10.00',
-    currency:    'GBP',
+    entityId: ENTITY_ID,
+    amount: '10.00',
+    currency: 'GBP',
     paymentType: 'DB',
-    integrity:   'true'
+    integrity: 'true'
   }).toString();
 
   return fetch(BASE + 'v1/checkouts', {
@@ -31,6 +31,7 @@ function prepareCheckout() {
   }).then(r => r.json());
 }
 
+// Step 2 – Serve payment page with checkoutId injected
 app.get('/checkout', async (req, res) => {
   try {
     const prep = await prepareCheckout();
@@ -40,35 +41,30 @@ app.get('/checkout', async (req, res) => {
     html = html.replace(/{{checkoutId}}/g, checkoutId);
 
     res.send(html);
-  } catch (_) {
+  } catch (err) {
+    console.error(err);
     res.status(500).send('Could not initialize payment.');
   }
 });
 
-function getPaymentStatus(resourcePath) {
-  const rp  = String(resourcePath || '').replace(/^\/+/, '');
-  const url = BASE + rp + `?entityId=${encodeURIComponent(ENTITY_ID)}`;
-
-  return fetch(url, {
-    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
-  }).then(r => r.json());
-}
-
-// Serve the confirmation page (client JS will call /status)
-app.get('/result', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'paymentresult.html'));
-});
-
-// API for the confirmation page to fetch status (Step 3)
-app.get('/status', async (req, res) => {
+// Step 3 – Handle shopperResultUrl (payment result)
+app.get('/paymentresult', async (req, res) => {
   const resourcePath = req.query.resourcePath;
-  if (!resourcePath) return res.status(400).json({ error: 'Missing resourcePath' });
+  if (!resourcePath) return res.status(400).send('Missing resourcePath');
 
   try {
-    const status = await getPaymentStatus(resourcePath);
-    res.json(status);
-  } catch (_) {
-    res.status(500).json({ error: 'Could not fetch payment status' });
+    const rp = String(resourcePath).replace(/^\/+/, '');
+    const url = BASE + rp + `?entityId=${encodeURIComponent(ENTITY_ID)}`;
+
+    const status = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+    }).then(r => r.json());
+
+    // For now, just dump JSON payload in browser
+    res.send(`<pre>${JSON.stringify(status, null, 2)}</pre>`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error fetching payment status');
   }
 });
 
