@@ -1,56 +1,40 @@
-const express     = require('express');
-const https       = require('https');
-const querystring = require('querystring');
-const fs          = require('fs');
-const path        = require('path');
-const {
-  ENTITY_ID,
-  ACCESS_TOKEN,
-  API_HOST
-} = require('./config');
+// server.js
+const express = require('express');
+const fs      = require('fs');
+const path    = require('path');
+const { ENTITY_ID, ACCESS_TOKEN, API_HOST } = require('./config');
 
 const app = express();
 
+// Serve static files from /public (keep this unless Vercel serves them for you)
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.urlencoded({ extended: true }));
 
+// Create checkout (POST /v1/checkouts) and render payment page
 function prepareCheckout(amount, currency) {
-  const postData = querystring.stringify({
+  const body = new URLSearchParams({
     entityId: ENTITY_ID,
     amount,
     currency,
     paymentType: 'DB',
     integrity: 'true'
-  });
+  }).toString();
 
-  const options = {
-    hostname: API_HOST,
-    port: 443,
-    path: '/v1/checkouts',
+  return fetch(`https://${API_HOST}/v1/checkouts`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Content-Length': Buffer.byteLength(postData),
       'Authorization': `Bearer ${ACCESS_TOKEN}`
-    }
-  };
+    },
+    body
+  }).then(r => r.json());
+}
 
-  return new Promise((resolve, reject) => {
-    const req = https.request(options, res => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(data));
-        } catch (err) {
-          reject(err);
-        }
-      });
-    });
-    req.on('error', reject);
-    req.write(postData);
-    req.end();
-  });
+// Get payment status using baseUrl + resourcePath
+function getPaymentStatus(resourcePath) {
+  const url = `https://${API_HOST}${resourcePath}?entityId=${encodeURIComponent(ENTITY_ID)}`;
+  return fetch(url, {
+    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+  }).then(r => r.json());
 }
 
 app.get('/checkout', async (req, res) => {
@@ -59,47 +43,16 @@ app.get('/checkout', async (req, res) => {
 
   try {
     const prep = await prepareCheckout(amount, currency);
-    console.log('prepareCheckout response:', JSON.stringify(prep, null, 2));
-    const { id: checkoutId } = prep;
+    const checkoutId = prep?.id || '';
 
     let html = fs.readFileSync(path.join(__dirname, 'public', 'payment.html'), 'utf8');
     html = html.replace(/{{checkoutId}}/g, checkoutId);
 
     res.send(html);
   } catch (err) {
-    console.error('Error preparing checkout:', err);
     res.status(500).send('Could not initialize payment.');
   }
 });
-
-function getPaymentStatus(resourcePath) {
-  return new Promise((resolve, reject) => {
-    const pathWithQuery = `${resourcePath}?entityId=${ENTITY_ID}`;
-    const options = {
-      hostname: API_HOST,
-      port: 443,
-      path: pathWithQuery,
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${ACCESS_TOKEN}`
-      }
-    };
-
-    const req = https.request(options, res => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(data));
-        } catch (err) {
-          reject(err);
-        }
-      });
-    });
-    req.on('error', reject);
-    req.end();
-  });
-}
 
 app.get('/result', async (req, res) => {
   const resourcePath = req.query.resourcePath;
@@ -114,13 +67,12 @@ app.get('/result', async (req, res) => {
     html = html
       .replace(/{{statusCode}}/g, statusResponse?.result?.code || '')
       .replace(/{{statusDescription}}/g, statusResponse?.result?.description || '')
-      .replace(/{{paymentBrand}}/g, statusResponse.paymentBrand || '')
-      .replace(/{{amount}}/g, statusResponse.amount || '')
-      .replace(/{{currency}}/g, statusResponse.currency || '');
+      .replace(/{{paymentBrand}}/g, statusResponse?.paymentBrand || '')
+      .replace(/{{amount}}/g, statusResponse?.amount || '')
+      .replace(/{{currency}}/g, statusResponse?.currency || '');
 
     res.send(html);
   } catch (err) {
-    console.error('Error fetching payment status:', err);
     res.status(500).send('Could not fetch payment status.');
   }
 });
