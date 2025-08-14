@@ -141,7 +141,6 @@ var wpwlOptions = {
     },
     onPaymentAuthorized: function(payment) {
       console.log("onPaymentAuthorized:", payment);
-      // Return SUCCESS or FAILURE
       return { transactionState: "SUCCESS" };
     }
   }

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy"
-      content="
+  <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
         style-src   'self' https://eu-test.oppwa.com 'unsafe-inline';
         frame-src   'self' https://eu-test.oppwa.com https://pay.google.com https://applepay.cdn-apple.com;
@@ -17,16 +17,13 @@
   <title>NomuPay Copy&Pay</title>
   <link rel="stylesheet" href="styles.css">
   <script src="wpwloptions.js"></script>
-  <script src="https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId={{checkoutId}}"></script>
+  <script src="https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId={{checkoutId}}"{{integrityAttr}}></script>
 </head>
+
 <body>
   <div class="container">
     <h1>Complete Your Payment</h1>
-<form
-  action="https://nomupay-demo-copypay.vercel.app/result"
-  class="paymentWidgets"
-  data-brands="APPLEPAY GOOGLEPAY VISA MASTER">
-</form>
+    <form action="/paymentresult" class="paymentWidgets" data-brands="APPLEPAY GOOGLEPAY VISA MASTER"></form>
   </div>
 </body>
 

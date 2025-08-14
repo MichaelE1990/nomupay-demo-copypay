@@ -1,72 +1,85 @@
 // server
-const express = require('express');
-const fs      = require('fs');
-const path    = require('path');
-const { ENTITY_ID, ACCESS_TOKEN, API_HOST } = require('./config');
-const app  = express();
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+const { ENTITY_ID, ACCESS_TOKEN, API_HOST } = require("./config");
+const app = express();
 
 // Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
 // Utilities
-const BASE = 'https://' + String(API_HOST).replace(/\/?$/, '/');
+const BASE = "https://" + String(API_HOST).replace(/\/?$/, "/");
 
 function prepareCheckout() {
   const body = new URLSearchParams({
-    entityId:    ENTITY_ID,
-    amount:      '10.00',
-    currency:    'GBP',
-    paymentType: 'DB',
-    integrity:   'true'
+    entityId: ENTITY_ID,
+    amount: "10.00",
+    currency: "GBP",
+    paymentType: "DB",
+    integrity: "true",
   }).toString();
 
-  return fetch(BASE + 'v1/checkouts', {
-    method: 'POST',
+  return fetch(BASE + "v1/checkouts", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': `Bearer ${ACCESS_TOKEN}`
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Bearer ${ACCESS_TOKEN}`,
     },
-    body
-  }).then(r => r.json());
+    body,
+  }).then((r) => r.json());
 }
 
-app.get('/checkout', async (req, res) => {
+app.get("/checkout", async (req, res) => {
   try {
     const prep = await prepareCheckout();
-    const checkoutId = prep?.id || '';
+    const checkoutId = prep?.id || "";
 
-    let html = fs.readFileSync(path.join(__dirname, 'public', 'payment.html'), 'utf8');
+    const scriptIntegrity = prep?.scriptIntegrity || "";
+    const integrityAttr = scriptIntegrity
+      ? ` integrity="${scriptIntegrity}" crossorigin="anonymous"`
+      : "";
+
+    let html = fs.readFileSync(
+      path.join(__dirname, "public", "payment.html"),
+      "utf8"
+    );
     html = html.replace(/{{checkoutId}}/g, checkoutId);
+    html = html.replace(/{{integrityAttr}}/g, integrityAttr);
 
     res.send(html);
   } catch (_) {
-    res.status(500).send('Could not initialize payment.');
+    res.status(500).send("Could not initialize payment.");
   }
 });
 
 function getPaymentStatus(resourcePath) {
-  const rp  = String(resourcePath || '').replace(/^\/+/, '');
+  const rp = String(resourcePath || "").replace(/^\/+/, "");
   const url = BASE + rp + `?entityId=${encodeURIComponent(ENTITY_ID)}`;
 
   return fetch(url, {
-    headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
-  }).then(r => r.json());
+    headers: { Authorization: `Bearer ${ACCESS_TOKEN}` },
+  }).then((r) => r.json());
 }
 
-app.get('/result', async (req, res) => {
+app.get("/result", async (req, res) => {
   const resourcePath = req.query.resourcePath;
   if (!resourcePath) {
-    return res.status(400).send('Missing resourcePath query parameter.');
+    return res.status(400).send("Missing resourcePath query parameter.");
   }
 
   try {
     const status = await getPaymentStatus(resourcePath);
-    res.json(status); // Send the raw API response directly
+    res.json(status);
   } catch (_) {
-    res.status(500).send('Could not fetch payment status.');
+    res.status(500).send("Could not fetch payment status.");
   }
 });
 
-app.get('/', (req, res) => res.redirect('/checkout'));
+app.get('/paymentresult', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'paymentresult.html'));
+});
+
+app.get("/", (req, res) => res.redirect("/checkout"));
 
 module.exports = app;
