@@ -128,6 +128,7 @@ var wpwlOptions = {
     supportedCountries: ["GB"],
     requiredShippingContactFields: ["postalAddress", "email"],
     requiredBillingContactFields: ["postalAddress"],
+    submitOnPaymentAuthorized: ["customer", "billing"],
     onCancel: function() {
       console.log("onCancel");
     },
