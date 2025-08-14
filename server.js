@@ -35,17 +35,11 @@ app.get("/payment", async (req, res) => {
     const prep = await prepareCheckout();
     const checkoutId = prep?.id || "";
 
-    const scriptIntegrity = prep?.scriptIntegrity || "";
-    const integrityAttr = scriptIntegrity
-      ? ` integrity="${scriptIntegrity}" crossorigin="anonymous"`
-      : "";
-
     let html = fs.readFileSync(
       path.join(__dirname, "public", "payment.html"),
       "utf8"
     );
     html = html.replace(/{{checkoutId}}/g, checkoutId);
-    html = html.replace(/{{integrityAttr}}/g, integrityAttr);
 
     res.send(html);
   } catch (_) {
@@ -74,10 +68,6 @@ app.get("/result", async (req, res) => {
   } catch (_) {
     res.status(500).send("Could not fetch payment status.");
   }
-});
-
-app.get('/paymentresult', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'paymentresult.html'));
 });
 
 app.get("/", (req, res) => res.redirect("/payment"));
