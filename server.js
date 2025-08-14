@@ -30,7 +30,7 @@ function prepareCheckout() {
   }).then((r) => r.json());
 }
 
-app.get("/checkout", async (req, res) => {
+app.get("/payment", async (req, res) => {
   try {
     const prep = await prepareCheckout();
     const checkoutId = prep?.id || "";
@@ -80,6 +80,6 @@ app.get('/paymentresult', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'paymentresult.html'));
 });
 
-app.get("/", (req, res) => res.redirect("/checkout"));
+app.get("/", (req, res) => res.redirect("/payment"));
 
 module.exports = app;

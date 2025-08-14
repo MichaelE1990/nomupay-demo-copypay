@@ -6,7 +6,7 @@
   ],
   "routes": [
     { "src": "/", "dest": "/server.js" },
-    { "src": "/checkout", "dest": "/server.js" },
+    { "src": "/payment", "dest": "/server.js" },
     { "src": "/result", "dest": "/server.js" },
     { "src": "/\\.well-known/(.*)", "dest": "/public/.well-known/$1" },
     { "src": "/paymentresult", "dest": "/public/paymentresult.html" },
