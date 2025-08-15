@@ -7,7 +7,6 @@ const app = express();
 
 // Serve static files
 app.use(express.static(path.join(__dirname, "public")));
-app.use(express.json());
 
 // Utilities
 const BASE = "https://" + String(API_HOST).replace(/\/?$/, "/");
@@ -30,39 +29,6 @@ function prepareCheckout() {
     body,
   }).then((r) => r.json());
 }
-
-app.post('/update-checkout', async (req, res) => {
-  try {
-    const { checkoutId, amount, currency } = req.body || {};
-    if (!checkoutId || !amount || !currency) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    const body = new URLSearchParams({
-      entityId: ENTITY_ID,
-      amount: String(amount),
-      currency: String(currency)
-    }).toString();
-
-    const resp = await fetch(BASE + 'v1/checkouts/' + encodeURIComponent(checkoutId), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-      },
-      body,
-    });
-
-    const data = await resp.json();
-    if (!resp.ok) {
-      return res.status(resp.status).json({ error: 'Gateway update failed', details: data });
-    }
-
-    res.json({ ok: true, gateway: data });
-  } catch (e) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
 
 app.get("/payment", async (req, res) => {
   try {
