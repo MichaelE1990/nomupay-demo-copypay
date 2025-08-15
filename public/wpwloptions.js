@@ -156,8 +156,7 @@ var wpwlOptions = {
     },
     onShippingMethodSelected: function(shippingMethod) {
       console.log("onShippingMethodSelected:", shippingMethod);
-      shippingAmount = (shippingMethod.identifier === "free") ? 0 : 500;
-      // Fire-and-forget update to keep server-side checkout in sync with new total
+shippingAmount = (shippingMethod.identifier === "free") ? 0 : 1; 
       updateCheckoutAmountOnServer();
       return {
         newTotal: getTotal(),
