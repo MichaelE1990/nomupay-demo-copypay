@@ -141,7 +141,7 @@ var wpwlOptions = {
       },
       {
         label: "Express Shipping",
-        amount: "5.00",
+        amount: "0.01",
         identifier: "express",
         detail: "Delivers in two business days"
       }
