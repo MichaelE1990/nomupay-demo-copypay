@@ -3,7 +3,7 @@ var subTotalAmount = 10;  // £0.10
 var shippingAmount = 0;
 var taxAmount = 0;
 var currency = "GBP";
-var applePayTotalLabel = "COMPANY, INC.";
+var applePayTotalLabel = "Nomupay";
 
 function getAmount() {
   return ((subTotalAmount + shippingAmount + taxAmount) / 100).toFixed(2);
