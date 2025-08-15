@@ -141,7 +141,7 @@ var wpwlOptions = {
       },
       {
         label: "Express Shipping",
-        amount: "0.01",
+        amount: "5.00",
         identifier: "express",
         detail: "Delivers in two business days"
       }
@@ -156,7 +156,8 @@ var wpwlOptions = {
     },
     onShippingMethodSelected: function(shippingMethod) {
       console.log("onShippingMethodSelected:", shippingMethod);
-      shippingAmount = (shippingMethod.identifier === "free") ? 0 : 1; 
+      shippingAmount = (shippingMethod.identifier === "free") ? 0 : 500;
+      // Fire-and-forget update to keep server-side checkout in sync with new total
       updateCheckoutAmountOnServer();
       return {
         newTotal: getTotal(),
@@ -169,16 +170,17 @@ var wpwlOptions = {
       return new Promise(function(resolve) {
         updateCheckoutAmountOnServer().then(function(result) {
           if (result && result.ok) {
-            // Apple Pay expects { status: "SUCCESS" } here
-            resolve({ status: "SUCCESS" });
+            resolve({ transactionState: "SUCCESS" });
           } else {
             console.warn('Failed to sync amount with server before payment:', result && result.message);
+            // Let the sheet show an error; user can try again
             resolve({
-              status: 'FAILURE',
-              errors: [{
-                code: 'merchantSessionError',
-                message: 'Could not sync updated amount. Please try again.'
-              }]
+              transactionState: 'ERROR',
+              error: {
+                reason: 'MERCHANT_ACCOUNT_ERROR',
+                message: 'Could not sync updated amount. Please try again.',
+                contactField: 'email'
+              }
             });
           }
         });
