@@ -17,13 +17,16 @@
   <title>NomuPay Copy&Pay</title>
   <link rel="stylesheet" href="styles.css">
   <script src="wpwloptions.js"></script>
+  <script>
+    window.__CHECKOUT_ID__ = "{{checkoutId}}";
+  </script>
   <script src="https://eu-prod.oppwa.com/v1/paymentWidgets.js?checkoutId={{checkoutId}}"></script>
 </head>
 
 <body>
   <div class="container">
     <h1>Complete Your Payment</h1>
-    <form action="/paymentresult" class="paymentWidgets" data-brands="APPLEPAY GOOGLEPAY VISA MASTER"></form>
+    <form action="/result" class="paymentWidgets" data-brands="APPLEPAY GOOGLEPAY VISA MASTER"></form>
   </div>
 </body>
 

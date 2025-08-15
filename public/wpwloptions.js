@@ -5,6 +5,28 @@ var taxAmount = 0;
 var currency = "GBP";
 var applePayTotalLabel = "Nomupay";
 
+async function updateCheckoutAmountOnServer() {
+  try {
+    const checkoutId = window.__CHECKOUT_ID__;
+    if (!checkoutId) return { ok: false, message: "Missing checkoutId" };
+
+    const res = await fetch('/update-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        checkoutId,
+        amount: getAmount(),
+        currency
+      })
+    });
+    if (!res.ok) return { ok: false, message: 'Server responded with an error' };
+    const data = await res.json();
+    return { ok: true, data };
+  } catch (e) {
+    return { ok: false, message: e && e.message ? e.message : 'Unknown error' };
+  }
+}
+
 function getAmount() {
   return ((subTotalAmount + shippingAmount + taxAmount) / 100).toFixed(2);
 }
@@ -135,6 +157,8 @@ var wpwlOptions = {
     onShippingMethodSelected: function(shippingMethod) {
       console.log("onShippingMethodSelected:", shippingMethod);
       shippingAmount = (shippingMethod.identifier === "free") ? 0 : 500;
+      // Fire-and-forget update to keep server-side checkout in sync with new total
+      updateCheckoutAmountOnServer();
       return {
         newTotal: getTotal(),
         newLineItems: getLineItems()
@@ -142,7 +166,25 @@ var wpwlOptions = {
     },
     onPaymentAuthorized: function(payment) {
       console.log("onPaymentAuthorized:", payment);
-      return { transactionState: "SUCCESS" };
+      // Ensure server-side checkout reflects the latest total before proceeding
+      return new Promise(function(resolve) {
+        updateCheckoutAmountOnServer().then(function(result) {
+          if (result && result.ok) {
+            resolve({ transactionState: "SUCCESS" });
+          } else {
+            console.warn('Failed to sync amount with server before payment:', result && result.message);
+            // Let the sheet show an error; user can try again
+            resolve({
+              transactionState: 'ERROR',
+              error: {
+                reason: 'MERCHANT_ACCOUNT_ERROR',
+                message: 'Could not sync updated amount. Please try again.',
+                contactField: 'email'
+              }
+            });
+          }
+        });
+      });
     }
   }
 };
