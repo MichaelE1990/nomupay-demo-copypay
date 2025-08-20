@@ -23,78 +23,65 @@ var wpwlOptions = {
   labels: {
     submit: "Process Payment"
   },
-  googlePay: {
-    merchantId: "BCR2DN4TTWM4FDYB",
-    gatewayMerchantId: "8ac7a4c781a732090181aaf9f6fc15d4",
-    gateway: "aciworldwide",
-    allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
-    merchantName: "Nomupay Demo",
-    allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
-    buttonColor: "black",
-    buttonType: "pay",
-    shippingAddressParameters: {
-      allowedCountryCodes: ["US", "IN"],
-      phoneNumberRequired: true
-    },
-    billingAddressRequired: true,
-    billingAddressParameters: {
-      format: "FULL",
-      phoneNumberRequired: true
-    },
-    shippingOptionRequired: true,
-    shippingOptionParameters: {
-      defaultSelectedOptionId: "shipping-002",
-      shippingOptions: [
-        {
-          id: "shipping-001",
-          label: "Free: Standard shipping",
-          description: "Free Shipping delivered in 5 business days."
-        },
-        {
-          id: "shipping-002",
-          label: "$1.99: Standard shipping",
-          description: "Standard shipping delivered in 3 business days."
-        },
-        {
-          id: "shipping-003",
-          label: "$10.00: Express shipping",
-          description: "Express shipping delivered in 1 business day."
-        }
-      ]
-    },
-    displayItems: [
-      { label: "Subtotal", type: "SUBTOTAL", price: "11.00" },
-      { label: "Tax", type: "TAX", price: "1.00" },
-      { label: "GST", type: "TAX", price: "1.00" }
-    ],
-    onPaymentDataChanged: function (intermediatePaymentData) {
-      return new Promise(function (resolve) {
-        resolve({});
-      });
-    },
-    onPaymentAuthorized: function (paymentData) {
-      console.log("onPaymentAuthorized:", paymentData);
-      return new Promise(function (resolve) {
-        var brand = (paymentData.paymentMethodData &&
-                     paymentData.paymentMethodData.info &&
-                     paymentData.paymentMethodData.info.cardNetwork) || '';
-        if (brand.toUpperCase() === 'MASTERCARD') {
-          // Allow Mastercard payments
-          resolve({ transactionState: 'SUCCESS' });
-        } else {
-          // Reject all other card networks
-          resolve({
-            transactionState: 'ERROR',
-            error: {
-              reason: 'PAYMENT_DATA_INVALID',
-              message: 'Only Mastercard payments are accepted in this test environment',
-              intent: 'PAYMENT_AUTHORIZATION'
-            }
-          });
-        }
-      });
-    },
+googlePay: {
+  merchantId: "xxx", // production Google Merchant ID here
+  gatewayMerchantId: "xxx", // production channel entity ID here
+  gateway: "aciworldwide",
+  allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
+  merchantName: "Store Name here",
+  allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
+  buttonColor: "black",
+  buttonType: "pay",
+
+  // UK-only shipping
+  shippingAddressParameters: {
+    allowedCountryCodes: ["GB"],
+    phoneNumberRequired: true
   },
+  billingAddressRequired: true,
+  billingAddressParameters: {
+    format: "FULL",
+    phoneNumberRequired: true
+  },
+
+  shippingOptionRequired: true,
+  shippingOptionParameters: {
+    defaultSelectedOptionId: "shipping-002",
+    shippingOptions: [
+      {
+        id: "shipping-001",
+        label: "Free: Standard shipping",
+        description: "Free shipping delivered in 5 business days."
+      },
+      {
+        id: "shipping-002",
+        label: "£1.99: Standard shipping",
+        description: "Standard shipping delivered in 3 business days."
+      },
+      {
+        id: "shipping-003",
+        label: "£10.00: Express shipping",
+        description: "Express shipping delivered in 1 business day."
+      }
+    ]
+  },
+
+  displayItems: [
+    { label: "Subtotal", type: "SUBTOTAL", price: "11.00" },
+    { label: "Tax", type: "TAX", price: "1.00" },
+    { label: "VAT", type: "TAX", price: "1.00" } // swapped GST → VAT for UK
+  ],
+
+  onPaymentDataChanged: function (intermediatePaymentData) {
+    return Promise.resolve({});
+  },
+
+  // No card brand restriction, always succeed for now
+  onPaymentAuthorized: function (paymentData) {
+    console.log("onPaymentAuthorized:", paymentData);
+    return Promise.resolve({ transactionState: "SUCCESS" });
+  }
+},
   applePay: {
     version: 3,
     checkAvailability: "applePayCapabilities",
