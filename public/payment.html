@@ -4,10 +4,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://applepay.cdn-apple.com/jsapi/v1/apple-pay-sdk.js"></script>
-
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src  'self' https://eu-prod.oppwa.com https://applepay.cdn-apple.com;
+  frame-src   'self' https://eu-prod.oppwa.com https://applepay.cdn-apple.com;
+  connect-src 'self' https://eu-prod.oppwa.com https://apple-pay-gateway.apple.com;
+  img-src     'self' https://eu-prod.oppwa.com https://applepay.cdn-apple.com data:;
+  font-src    'self' https://applepay.cdn-apple.com;
+  style-src   'self' https://eu-prod.oppwa.com 'unsafe-inline';
+">
 
   <title>NomuPay Copy&Pay</title>
   <link rel="stylesheet" href="styles.css">
