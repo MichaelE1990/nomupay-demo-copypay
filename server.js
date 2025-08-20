@@ -14,7 +14,7 @@ const BASE = "https://" + String(API_HOST).replace(/\/?$/, "/");
 function prepareCheckout() {
   const body = new URLSearchParams({
     entityId: ENTITY_ID,
-    amount: "10.00",
+    amount: "0.10",
     currency: "GBP",
     paymentType: "DB",
     integrity: "true",
