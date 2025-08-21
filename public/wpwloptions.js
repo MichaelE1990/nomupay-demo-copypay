@@ -18,128 +18,100 @@ function getLineItems() {
     { label: "Tax", amount: (taxAmount / 100).toFixed(2) }
   ];
 }
-window.wpwlOptions = {
+var wpwlOptions = {
   style: "plain",
   labels: {
     submit: "Process Payment"
   },
-  onReady: function (containers) {
-    function injectEmailIntoForm(form) {
-      if (!form || form.querySelector('input[name="customer.email"]')) return;
+  onReady: function () {
+    var form = document.querySelector('form.wpwl-form-card');
+    if (!form || form.querySelector('input[name="customer.email"]')) return;
 
-      var label = document.createElement('div');
-      label.className = 'wpwl-label wpwl-label-custom';
-      label.textContent = 'Email';
+    var label = document.createElement('div');
+    label.className = 'wpwl-label wpwl-label-custom';
+    label.textContent = 'Email';
 
-      var wrap = document.createElement('div');
-      wrap.className = 'wpwl-wrapper wpwl-wrapper-custom';
+    var wrap = document.createElement('div');
+    wrap.className = 'wpwl-wrapper wpwl-wrapper-custom';
 
-      var input = document.createElement('input');
-      input.type = 'email';
-      input.name = 'customer.email';
-      input.className = 'wpwl-control';
-      input.placeholder = 'Enter your email';
-      input.required = true;
-      input.autocomplete = 'email';
+    var input = document.createElement('input');
+    input.type = 'email';
+    input.name = 'customer.email';
+    input.className = 'wpwl-control';
+    input.placeholder = 'Enter your email';
+    input.required = true;
+    input.autocomplete = 'email';
 
-      wrap.appendChild(input);
+    wrap.appendChild(input);
 
-      var submitBtn = form.querySelector('.wpwl-button');
-      if (submitBtn && submitBtn.parentNode) {
-        submitBtn.parentNode.insertBefore(label, submitBtn);
-        submitBtn.parentNode.insertBefore(wrap, submitBtn);
-      } else {
-        form.appendChild(label);
-        form.appendChild(wrap);
+    var submitBtn = form.querySelector('.wpwl-button');
+    if (submitBtn && submitBtn.parentNode) {
+      submitBtn.parentNode.insertBefore(label, submitBtn);
+      submitBtn.parentNode.insertBefore(wrap, submitBtn);
+    } else {
+      form.appendChild(label);
+      form.appendChild(wrap);
+    }
+  },
+googlePay: {
+  merchantId: "xxx", // production Google Merchant ID here
+  gatewayMerchantId: "xxx", // production channel entity ID here
+  gateway: "aciworldwide",
+  allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
+  merchantName: "Store Name here",
+  allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
+  buttonColor: "black",
+  buttonType: "pay",
+
+  // UK-only shipping
+  shippingAddressParameters: {
+    allowedCountryCodes: ["GB"],
+    phoneNumberRequired: true
+  },
+  billingAddressRequired: true,
+  billingAddressParameters: {
+    format: "FULL",
+    phoneNumberRequired: true
+  },
+
+  shippingOptionRequired: true,
+  shippingOptionParameters: {
+    defaultSelectedOptionId: "shipping-002",
+    shippingOptions: [
+      {
+        id: "shipping-001",
+        label: "Free: Standard shipping",
+        description: "Free shipping delivered in 5 business days."
+      },
+      {
+        id: "shipping-002",
+        label: "£1.99: Standard shipping",
+        description: "Standard shipping delivered in 3 business days."
+      },
+      {
+        id: "shipping-003",
+        label: "£10.00: Express shipping",
+        description: "Express shipping delivered in 1 business day."
       }
-    }
-
-    // Prefer the containers array if provided by the SDK
-    if (Array.isArray(containers)) {
-      containers.forEach(function (c) {
-        var root = (c && (c.container || c.element || c.root)) || null;
-        if (root instanceof Element) {
-          var form = root.querySelector('form.wpwl-form-card') || root.querySelector('form.wpwl-form');
-          if (form) injectEmailIntoForm(form);
-        }
-      });
-    }
-
-    // Fallback: inject into any visible forms
-    document.querySelectorAll('form.wpwl-form-card, form.wpwl-form').forEach(injectEmailIntoForm);
-
-    // Re-inject if brand selection re-renders the form (avoid multiple listeners)
-    if (!window.__wpwlEmailInjectedBrandHook) {
-      window.__wpwlEmailInjectedBrandHook = true;
-      document.addEventListener('change', function (e) {
-        if (e.target && e.target.classList && e.target.classList.contains('wpwl-brand')) {
-          setTimeout(function () {
-            var active = document.querySelector('form.wpwl-form-card, form.wpwl-form');
-            injectEmailIntoForm(active);
-          }, 0);
-        }
-      });
-    }
+    ]
   },
-  googlePay: {
-    merchantId: "xxx", // production Google Merchant ID here
-    gatewayMerchantId: "xxx", // production channel entity ID here
-    gateway: "aciworldwide",
-    allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
-    merchantName: "Store Name here",
-    allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
-    buttonColor: "black",
-    buttonType: "pay",
 
-    // UK-only shipping
-    shippingAddressParameters: {
-      allowedCountryCodes: ["GB"],
-      phoneNumberRequired: true
-    },
-    billingAddressRequired: true,
-    billingAddressParameters: {
-      format: "FULL",
-      phoneNumberRequired: true
-    },
+  displayItems: [
+    { label: "Subtotal", type: "SUBTOTAL", price: "11.00" },
+    { label: "Tax", type: "TAX", price: "1.00" },
+    { label: "VAT", type: "TAX", price: "1.00" } // swapped GST → VAT for UK
+  ],
 
-    shippingOptionRequired: true,
-    shippingOptionParameters: {
-      defaultSelectedOptionId: "shipping-002",
-      shippingOptions: [
-        {
-          id: "shipping-001",
-          label: "Free: Standard shipping",
-          description: "Free shipping delivered in 5 business days."
-        },
-        {
-          id: "shipping-002",
-          label: "£1.99: Standard shipping",
-          description: "Standard shipping delivered in 3 business days."
-        },
-        {
-          id: "shipping-003",
-          label: "£10.00: Express shipping",
-          description: "Express shipping delivered in 1 business day."
-        }
-      ]
-    },
-
-    displayItems: [
-      { label: "Subtotal", type: "SUBTOTAL", price: "11.00" },
-      { label: "Tax", type: "TAX", price: "1.00" },
-      { label: "VAT", type: "TAX", price: "1.00" } // swapped GST → VAT for UK
-    ],
-
-    onPaymentDataChanged: function (intermediatePaymentData) {
-      return Promise.resolve({});
-    },
-
-    // No card brand restriction, always succeed for now
-    onPaymentAuthorized: function (paymentData) {
-      console.log("onPaymentAuthorized:", paymentData);
-      return Promise.resolve({ transactionState: "SUCCESS" });
-    }
+  onPaymentDataChanged: function (intermediatePaymentData) {
+    return Promise.resolve({});
   },
+
+  // No card brand restriction, always succeed for now
+  onPaymentAuthorized: function (paymentData) {
+    console.log("onPaymentAuthorized:", paymentData);
+    return Promise.resolve({ transactionState: "SUCCESS" });
+  }
+},
   applePay: {
     version: 3,
     checkAvailability: "applePayCapabilities",
