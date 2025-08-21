@@ -23,15 +23,17 @@ var wpwlOptions = {
   labels: {
     submit: "Process Payment"
   },
-  onReady: function () {
-  var emailFieldHtml =
-    '<div class="wpwl-label wpwl-label-custom">Email</div>' +
-    '<div class="wpwl-wrapper wpwl-wrapper-custom">' +
-      '<input type="email" name="customer.email" class="wpwl-control" ' +
-      'placeholder="Enter your email" required autocomplete="email" />' +
-    '</div>';
-  $('form.wpwl-form-card').find('.wpwl-button').before(emailFieldHtml);
-},
+onReady: function () {
+      var emailFieldHtml =
+        '<div class="wpwl-label wpwl-label-custom">Email</div>' +
+        '<div class="wpwl-wrapper wpwl-wrapper-custom">' +
+          '<input type="email" name="customer.email" class="wpwl-control" ' +
+          'placeholder="Enter your email" required autocomplete="email" />' +
+        '</div>';
+
+      // Insert into the card form before the submit button
+      $('form.wpwl-form-card').find('.wpwl-button').before(emailFieldHtml);
+    },
 googlePay: {
   merchantId: "xxx", // production Google Merchant ID here
   gatewayMerchantId: "xxx", // production channel entity ID here
