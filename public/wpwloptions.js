@@ -19,7 +19,7 @@ function getLineItems() {
   ];
 }
 window.wpwlOptions = {
-  style: "",
+  style: "plain",
   labels: {
     submit: "Process Payment"
   },
