@@ -18,6 +18,12 @@ function getLineItems() {
     { label: "Tax", amount: (taxAmount / 100).toFixed(2) }
   ];
 }
+function getLineItemsNoShipping() {
+  return [
+    { label: "Subtotal", amount: (subTotalAmount / 100).toFixed(2) },
+    { label: "Tax", amount: (taxAmount / 100).toFixed(2) }
+  ];
+}
 var wpwlOptions = {
   style: "plain",
   labels: {
@@ -126,36 +132,13 @@ googlePay: {
     countryCode: "GB",
     merchantCapabilities: ["supports3DS"],
     supportedNetworks: ["amex", "discover", "masterCard", "visa"],
-    lineItems: getLineItems(),
-    shippingMethods: [
-      {
-        label: "Free Shipping",
-        amount: "0.00",
-        identifier: "free",
-        detail: "Delivers in five business days"
-      },
-      {
-        label: "Express Shipping",
-        amount: "5.00",
-        identifier: "express",
-        detail: "Delivers in two business days"
-      }
-    ],
-    shippingType: "shipping",
+    lineItems: getLineItemsNoShipping(),
     supportedCountries: ["GB"],
-    requiredShippingContactFields: ["postalAddress", "email"],
-    requiredBillingContactFields: ["postalAddress"],
+    requiredShippingContactFields: ["email"],
+    requiredBillingContactFields: [],
     submitOnPaymentAuthorized: ["customer", "billing"],
     onCancel: function() {
       console.log("onCancel");
-    },
-    onShippingMethodSelected: function(shippingMethod) {
-      console.log("onShippingMethodSelected:", shippingMethod);
-      shippingAmount = (shippingMethod.identifier === "free") ? 0 : 500;
-      return {
-        newTotal: getTotal(),
-        newLineItems: getLineItems()
-      };
     },
     onPaymentAuthorized: function(payment) {
       console.log("onPaymentAuthorized:", payment);
