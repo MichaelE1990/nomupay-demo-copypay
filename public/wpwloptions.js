@@ -134,7 +134,6 @@ googlePay: {
     supportedNetworks: ["amex", "discover", "masterCard", "visa"],
     lineItems: getLineItemsNoShipping(),
     supportedCountries: ["GB"],
-    requiredShippingContactFields: ["email"],
     requiredBillingContactFields: [],
     submitOnPaymentAuthorized: ["customer", "billing"],
     onCancel: function() {
