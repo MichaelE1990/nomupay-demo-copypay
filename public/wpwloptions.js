@@ -121,7 +121,7 @@ googlePay: {
   applePay: {
     version: 3,
     checkAvailability: "applePayCapabilities",
-    merchantIdentifier: "8ac7a4c781a732090181aaf9f6fc15d4",
+    merchantIdentifier: "8ac9a4cd9662a1bc0196687d626128ad",
     buttonSource: "js",
     buttonStyle: "white-outline",
     buttonType: "buy",
@@ -131,7 +131,7 @@ googlePay: {
     currencyCode: currency,
     countryCode: "GB",
     merchantCapabilities: ["supports3DS"],
-    supportedNetworks: ["amex", "discover", "masterCard", "visa"],
+    supportedNetworks: ["discover", "masterCard", "visa"],
     lineItems: getLineItemsNoShipping(),
     supportedCountries: ["GB"],
     requiredBillingContactFields: [],
