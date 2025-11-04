@@ -82,7 +82,7 @@ googlePay: {
 
   shippingOptionRequired: true,
   shippingOptionParameters: {
-    defaultSelectedOptionId: "shipping-002",
+    defaultSelectedOptionId: "shipping-001",
     shippingOptions: [
       {
         id: "shipping-001",
