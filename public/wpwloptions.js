@@ -108,7 +108,41 @@ googlePay: {
   ],
 
   onPaymentDataChanged: function (intermediatePaymentData) {
-    return Promise.resolve({});
+    return new Promise(function(resolve) {
+      var paymentDataUpdate = {};
+
+      // Handle shipping option changes
+      if (intermediatePaymentData.callbackTrigger === 'SHIPPING_OPTION') {
+        var selectedShippingOptionId = intermediatePaymentData.shippingOptionData.id;
+        var shippingCost = 0;
+
+        // Determine shipping cost based on selected option
+        if (selectedShippingOptionId === 'shipping-001') {
+          shippingCost = 0; // Free shipping
+        } else if (selectedShippingOptionId === 'shipping-002') {
+          shippingCost = 199; // £1.99 in pence
+        } else if (selectedShippingOptionId === 'shipping-003') {
+          shippingCost = 1000; // £10.00 in pence
+        }
+
+        // Calculate new total
+        var newTotal = subTotalAmount + shippingCost + taxAmount;
+
+        // Update transaction info with new total
+        paymentDataUpdate.newTransactionInfo = {
+          currencyCode: currency,
+          totalPriceStatus: 'FINAL',
+          totalPrice: (newTotal / 100).toFixed(2),
+          displayItems: [
+            { label: "Subtotal", type: "SUBTOTAL", price: (subTotalAmount / 100).toFixed(2) },
+            { label: "Shipping", type: "LINE_ITEM", price: (shippingCost / 100).toFixed(2) },
+            { label: "Tax", type: "TAX", price: (taxAmount / 100).toFixed(2) }
+          ]
+        };
+      }
+
+      resolve(paymentDataUpdate);
+    });
   },
 
   // No card brand restriction, always succeed for now
