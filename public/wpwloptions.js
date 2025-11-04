@@ -60,7 +60,8 @@ var wpwlOptions = {
     }
   },
 googlePay: {
-  merchantId: "BCR2DN4TTWM4FDYB", // production Google Merchant ID here
+  environment: "TEST",
+  merchantId: "12345678901234567890", // Standard test merchant ID
   gatewayMerchantId: "8ac7a4c781a732090181aaf9f6fc15d4",
   gateway: "aciworldwide",
   allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
@@ -154,7 +155,7 @@ googlePay: {
   applePay: {
     version: 3,
     checkAvailability: "applePayCapabilities",
-    merchantIdentifier: "8ac9a4cd9662a1bc0196687d626128ad",
+    merchantIdentifier: "8ac7a4c781a732090181aaf9f6fc15d4",
     buttonSource: "js",
     buttonStyle: "white-outline",
     buttonType: "buy",
