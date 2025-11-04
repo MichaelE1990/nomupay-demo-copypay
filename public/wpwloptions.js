@@ -60,8 +60,7 @@ var wpwlOptions = {
     }
   },
 googlePay: {
-  environment: "TEST",
-  merchantId: "12345678901234567890", // Standard test merchant ID
+  merchantId: "BCR2DN4TTWM4FDYB",
   gatewayMerchantId: "8ac7a4c781a732090181aaf9f6fc15d4",
   gateway: "aciworldwide",
   allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
@@ -69,6 +68,7 @@ googlePay: {
   allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
   buttonColor: "black",
   buttonType: "pay",
+  callbackIntents: ["SHIPPING_OPTION"],
 
   // UK-only shipping
   shippingAddressParameters: {
