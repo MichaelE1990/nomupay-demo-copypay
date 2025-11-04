@@ -103,9 +103,8 @@ googlePay: {
   },
 
   displayItems: [
-    { label: "Subtotal", type: "SUBTOTAL", price: "11.00" },
-    { label: "Tax", type: "TAX", price: "1.00" },
-    { label: "VAT", type: "TAX", price: "1.00" } // swapped GST → VAT for UK
+    { label: "Subtotal", type: "SUBTOTAL", price: (subTotalAmount / 100).toFixed(2) },
+    { label: "Tax", type: "TAX", price: (taxAmount / 100).toFixed(2) }
   ],
 
   onPaymentDataChanged: function (intermediatePaymentData) {
