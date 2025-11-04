@@ -15,7 +15,7 @@ function prepareCheckout() {
   const body = new URLSearchParams({
     entityId: ENTITY_ID,
     amount: "0.10",
-    currency: "EUR",
+    currency: "GBP",
     paymentType: "DB",
     integrity: "true",
   }).toString();
