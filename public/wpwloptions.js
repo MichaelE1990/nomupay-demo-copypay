@@ -29,38 +29,106 @@ var wpwlOptions = {
   labels: {
     submit: "Process Payment"
   },
-  onReady: function () {
-    var form = document.querySelector('form.wpwl-form-card');
-    if (!form || form.querySelector('input[name="customer.email"]')) return;
-
-    var label = document.createElement('div');
-    label.className = 'wpwl-label wpwl-label-custom';
-    label.textContent = 'Email';
-
-    var wrap = document.createElement('div');
-    wrap.className = 'wpwl-wrapper wpwl-wrapper-custom';
-
-    var input = document.createElement('input');
-    input.type = 'email';
-    input.name = 'customer.email';
-    input.className = 'wpwl-control';
-    input.placeholder = 'Enter your email';
-    input.required = true;
-    input.autocomplete = 'email';
-
-    wrap.appendChild(input);
-
-    var submitBtn = form.querySelector('.wpwl-button');
-    if (submitBtn && submitBtn.parentNode) {
-      submitBtn.parentNode.insertBefore(label, submitBtn);
-      submitBtn.parentNode.insertBefore(wrap, submitBtn);
-    } else {
-      form.appendChild(label);
-      form.appendChild(wrap);
-    }
-  },
+	onReady: function(){ 
+		$(".wpwl-group-cardNumber").after($(".wpwl-group-brand").detach());
+		$(".wpwl-group-cvv").after( $(".wpwl-group-cardHolder").detach());
+		var visa = $(".wpwl-brand:first").clone().removeAttr("class").attr("class", "wpwl-brand-card wpwl-brand-custom wpwl-brand-VISA")
+		var master = $(visa).clone().removeClass("wpwl-brand-VISA").addClass("wpwl-brand-MASTER");
+		$(".wpwl-brand:first").after( $(master)).after( $(visa));
+		var imageUrl = "https://eu-test.oppwa.com/v1/static/" + wpwl.cacheVersion + "/img/brand.png";
+		$(".wpwl-brand-custom").css("background-image", "url(" + imageUrl + ")");
+	},
 googlePay: {
-  gatewayMerchantId: "8ac7a4c781a732090181aaf9f6fc15d4"
+  merchantId: "BCR2DN4TTWM4FDYB", // production Google Merchant ID here
+  gatewayMerchantId: "8ac7a4c781a732090181aaf9f6fc15d4",
+  gateway: "aciworldwide",
+  allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
+  merchantName: "Nomupay Demo",
+  allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
+  buttonColor: "black",
+  buttonType: "pay",
+
+  // UK-only shipping
+  shippingAddressParameters: {
+    allowedCountryCodes: ["GB"],
+    phoneNumberRequired: true
+  },
+  billingAddressRequired: true,
+  billingAddressParameters: {
+    format: "FULL",
+    phoneNumberRequired: true
+  },
+
+  shippingOptionRequired: true,
+  shippingOptionParameters: {
+    defaultSelectedOptionId: "shipping-001",
+    shippingOptions: [
+      {
+        id: "shipping-001",
+        label: "Free: Standard shipping",
+        description: "Free shipping delivered in 5 business days."
+      },
+      {
+        id: "shipping-002",
+        label: "£1.99: Standard shipping",
+        description: "Standard shipping delivered in 3 business days."
+      },
+      {
+        id: "shipping-003",
+        label: "£10.00: Express shipping",
+        description: "Express shipping delivered in 1 business day."
+      }
+    ]
+  },
+
+  displayItems: [
+    { label: "Subtotal", type: "SUBTOTAL", price: (subTotalAmount / 100).toFixed(2) },
+    { label: "Tax", type: "TAX", price: (taxAmount / 100).toFixed(2) }
+  ],
+
+  onPaymentDataChanged: function (intermediatePaymentData) {
+    return new Promise(function(resolve) {
+      var paymentDataUpdate = {};
+
+      // Handle shipping option changes
+      if (intermediatePaymentData.callbackTrigger === 'SHIPPING_OPTION') {
+        var selectedShippingOptionId = intermediatePaymentData.shippingOptionData.id;
+        var shippingCost = 0;
+
+        // Determine shipping cost based on selected option
+        if (selectedShippingOptionId === 'shipping-001') {
+          shippingCost = 0; // Free shipping
+        } else if (selectedShippingOptionId === 'shipping-002') {
+          shippingCost = 199; // £1.99 in pence
+        } else if (selectedShippingOptionId === 'shipping-003') {
+          shippingCost = 1000; // £10.00 in pence
+        }
+
+        // Calculate new total
+        var newTotal = subTotalAmount + shippingCost + taxAmount;
+
+        // Update transaction info with new total
+        paymentDataUpdate.newTransactionInfo = {
+          currencyCode: currency,
+          totalPriceStatus: 'FINAL',
+          totalPrice: (newTotal / 100).toFixed(2),
+          displayItems: [
+            { label: "Subtotal", type: "SUBTOTAL", price: (subTotalAmount / 100).toFixed(2) },
+            { label: "Shipping", type: "LINE_ITEM", price: (shippingCost / 100).toFixed(2) },
+            { label: "Tax", type: "TAX", price: (taxAmount / 100).toFixed(2) }
+          ]
+        };
+      }
+
+      resolve(paymentDataUpdate);
+    });
+  },
+
+  // No card brand restriction, always succeed for now
+  onPaymentAuthorized: function (paymentData) {
+    console.log("onPaymentAuthorized:", paymentData);
+    return Promise.resolve({ transactionState: "SUCCESS" });
+  }
 },
   applePay: {
     version: 3,
