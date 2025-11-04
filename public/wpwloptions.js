@@ -60,97 +60,86 @@ var wpwlOptions = {
     }
   },
 googlePay: {
-  merchantId: "BCR2DN4TTWM4FDYB",
-  gatewayMerchantId: "8ac7a4c781a732090181aaf9f6fc15d4",
-  gateway: "aciworldwide",
-  allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
-  merchantName: "Store Name here",
-  allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
-  buttonColor: "black",
-  buttonType: "pay",
-  callbackIntents: ["SHIPPING_OPTION"],
+    // Your entity ID provided by us
+    gatewayMerchantId: "8ac7a4c781a732090181aaf9f6fc15d4",
 
-  // UK-only shipping
-  shippingAddressParameters: {
-    allowedCountryCodes: ["GB"],
-    phoneNumberRequired: true
-  },
-  billingAddressRequired: true,
-  billingAddressParameters: {
-    format: "FULL",
-    phoneNumberRequired: true
-  },
+    // Google merchant identifier
+    merchantId: "BCR2DN4TTWM4FDYB",
 
-  shippingOptionRequired: true,
-  shippingOptionParameters: {
-    defaultSelectedOptionId: "shipping-001",
-    shippingOptions: [
-      {
-        id: "shipping-001",
-        label: "Free: Standard shipping",
-        description: "Free shipping delivered in 5 business days."
-      },
-      {
-        id: "shipping-002",
-        label: "£1.99: Standard shipping",
-        description: "Standard shipping delivered in 3 business days."
-      },
-      {
-        id: "shipping-003",
-        label: "£10.00: Express shipping",
-        description: "Express shipping delivered in 1 business day."
-      }
-    ]
-  },
+    // Possible values: PAN_ONLY, CRYPTOGRAM_3DS
+    allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
 
-  displayItems: [
-    { label: "Subtotal", type: "SUBTOTAL", price: (subTotalAmount / 100).toFixed(2) },
-    { label: "Tax", type: "TAX", price: (taxAmount / 100).toFixed(2) }
-  ],
+    // Possible values: AMEX, DISCOVER, JCB, MASTERCARD, VISA
+    allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
 
-  onPaymentDataChanged: function (intermediatePaymentData) {
-    return new Promise(function(resolve) {
-      var paymentDataUpdate = {};
+    // Possible values: default, black, white
+    buttonColor: "white",
 
-      // Handle shipping option changes
-      if (intermediatePaymentData.callbackTrigger === 'SHIPPING_OPTION') {
-        var selectedShippingOptionId = intermediatePaymentData.shippingOptionData.id;
-        var shippingCost = 0;
+    // Possible values: book, buy (default), checkout, donate, order, pay, plain, subscribe
+    buttonType: "pay",
 
-        // Determine shipping cost based on selected option
-        if (selectedShippingOptionId === 'shipping-001') {
-          shippingCost = 0; // Free shipping
-        } else if (selectedShippingOptionId === 'shipping-002') {
-          shippingCost = 199; // £1.99 in pence
-        } else if (selectedShippingOptionId === 'shipping-003') {
-          shippingCost = 1000; // £10.00 in pence
-        }
+    // Possible values: static (default), fill
+    buttonSizeMode: "fill",
 
-        // Calculate new total
-        var newTotal = subTotalAmount + shippingCost + taxAmount;
+    // The name shown in the payment sheet
+    merchantName: "Nomupay",
 
-        // Update transaction info with new total
-        paymentDataUpdate.newTransactionInfo = {
-          currencyCode: currency,
-          totalPriceStatus: 'FINAL',
-          totalPrice: (newTotal / 100).toFixed(2),
-          displayItems: [
-            { label: "Subtotal", type: "SUBTOTAL", price: (subTotalAmount / 100).toFixed(2) },
-            { label: "Shipping", type: "LINE_ITEM", price: (shippingCost / 100).toFixed(2) },
-            { label: "Tax", type: "TAX", price: (taxAmount / 100).toFixed(2) }
-          ]
-        };
-      }
+    // The shipping address parameters
+    shippingAddressParameters: {
+        allowedCountryCodes: ["GB"],
+        phoneNumberRequired: true
+    },
 
-      resolve(paymentDataUpdate);
-    });
-  },
+    // If shoppers billing address is required
+    billingAddressRequired: true,
 
-  // No card brand restriction, always succeed for now
-  onPaymentAuthorized: function (paymentData) {
-    console.log("onPaymentAuthorized:", paymentData);
-    return Promise.resolve({ transactionState: "SUCCESS" });
-  }
+    // The desired format for the billing address
+    billingAddressParameters: { "format": "FULL", phoneNumberRequired: true },
+
+    // The shipping option
+    shippingOptionRequired: true,
+
+    // The shipping option parameters configuration
+    shippingOptionParameters: {
+        defaultSelectedOptionId: "shipping-001",
+        shippingOptions: [{
+            id: "shipping-001",
+            label: "Free: Standard shipping",
+            description: "Free Shipping delivered in 5 business days."
+        }, {
+            id: "shipping-002",
+            label: "£1.99: Standard shipping",
+            description: "Standard shipping delivered in 3 business days."
+        }, {
+            id: "shipping-003",
+            label: "£10.00: Express shipping",
+            description: "Express shipping delivered in 1 business day."
+        }]
+    },
+
+    displayItems: [{
+        label: "Subtotal",
+        type: "SUBTOTAL",
+        price: "0.10"
+    }, {
+        label: "Tax",
+        type: "TAX",
+        price: "0.00"
+    }],
+
+    // Callback when payment data is changed
+    onPaymentDataChanged: function (intermediatePaymentData) {
+        return new Promise(function(resolve, reject) {
+            resolve({});
+        });
+    },
+
+    // Callback when a payment is authorized
+    onPaymentAuthorized: function (paymentData) {
+        return new Promise(function(resolve, reject) {
+            resolve({ transactionState: "SUCCESS" });
+        });
+    }
 },
   applePay: {
     version: 3,
