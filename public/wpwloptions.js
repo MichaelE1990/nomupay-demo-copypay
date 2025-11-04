@@ -38,98 +38,21 @@ var wpwlOptions = {
 		var imageUrl = "https://eu-test.oppwa.com/v1/static/" + wpwl.cacheVersion + "/img/brand.png";
 		$(".wpwl-brand-custom").css("background-image", "url(" + imageUrl + ")");
 	},
-googlePay: {
-  merchantId: "BCR2DN4TTWM4FDYB", // production Google Merchant ID here
-  gatewayMerchantId: "8ac7a4c781a732090181aaf9f6fc15d4",
-  gateway: "aciworldwide",
-  allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
-  merchantName: "Nomupay Demo",
-  allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
-  buttonColor: "black",
-  buttonType: "pay",
-
-  // UK-only shipping
-  shippingAddressParameters: {
-    allowedCountryCodes: ["GB"],
-    phoneNumberRequired: true
-  },
-  billingAddressRequired: true,
-  billingAddressParameters: {
-    format: "FULL",
-    phoneNumberRequired: true
-  },
-
-  shippingOptionRequired: true,
-  shippingOptionParameters: {
-    defaultSelectedOptionId: "shipping-001",
-    shippingOptions: [
-      {
-        id: "shipping-001",
-        label: "Free: Standard shipping",
-        description: "Free shipping delivered in 5 business days."
-      },
-      {
-        id: "shipping-002",
-        label: "£1.99: Standard shipping",
-        description: "Standard shipping delivered in 3 business days."
-      },
-      {
-        id: "shipping-003",
-        label: "£10.00: Express shipping",
-        description: "Express shipping delivered in 1 business day."
-      }
-    ]
-  },
-
-  displayItems: [
-    { label: "Subtotal", type: "SUBTOTAL", price: (subTotalAmount / 100).toFixed(2) },
-    { label: "Tax", type: "TAX", price: (taxAmount / 100).toFixed(2) }
-  ],
-
-  onPaymentDataChanged: function (intermediatePaymentData) {
-    return new Promise(function(resolve) {
-      var paymentDataUpdate = {};
-
-      // Handle shipping option changes
-      if (intermediatePaymentData.callbackTrigger === 'SHIPPING_OPTION') {
-        var selectedShippingOptionId = intermediatePaymentData.shippingOptionData.id;
-        var shippingCost = 0;
-
-        // Determine shipping cost based on selected option
-        if (selectedShippingOptionId === 'shipping-001') {
-          shippingCost = 0; // Free shipping
-        } else if (selectedShippingOptionId === 'shipping-002') {
-          shippingCost = 199; // £1.99 in pence
-        } else if (selectedShippingOptionId === 'shipping-003') {
-          shippingCost = 1000; // £10.00 in pence
-        }
-
-        // Calculate new total
-        var newTotal = subTotalAmount + shippingCost + taxAmount;
-
-        // Update transaction info with new total
-        paymentDataUpdate.newTransactionInfo = {
-          currencyCode: currency,
-          totalPriceStatus: 'FINAL',
-          totalPrice: (newTotal / 100).toFixed(2),
-          displayItems: [
-            { label: "Subtotal", type: "SUBTOTAL", price: (subTotalAmount / 100).toFixed(2) },
-            { label: "Shipping", type: "LINE_ITEM", price: (shippingCost / 100).toFixed(2) },
-            { label: "Tax", type: "TAX", price: (taxAmount / 100).toFixed(2) }
-          ]
-        };
-      }
-
-      resolve(paymentDataUpdate);
-    });
-  },
-
-  // No card brand restriction, always succeed for now
-  onPaymentAuthorized: function (paymentData) {
-    console.log("onPaymentAuthorized:", paymentData);
-    return Promise.resolve({ transactionState: "SUCCESS" });
-  }
-},
+    googlePay: {
+      gatewayMerchantId: "8ac7a4c781a732090181aaf9f6fc15d4",
+      merchantId: "BCR2DN4TTWM4FDYB",
+      allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
+      billingAddressRequired: true,
+      submitOnPaymentAuthorized: ["customer", "billing"],
+      merchantName: "Nomupay Demo",
+	  buttonColor: "white",
+	  buttonType: "pay",
+	  buttonSizeMode: "fill",
+	  billingAddressRequired: true,
+	  billingAddressParameters : { "format": "FULL", phoneNumberRequired : true },
+	  
+	  
+	},
   applePay: {
     version: 3,
     checkAvailability: "applePayCapabilities",
