@@ -60,8 +60,8 @@ var wpwlOptions = {
     }
   },
 googlePay: {
-  merchantId: "xxx", // production Google Merchant ID here
-  gatewayMerchantId: "xxx", // production channel entity ID here
+  merchantId: "5574028703", // production Google Merchant ID here
+  gatewayMerchantId: "8ac7a4c781a732090181aaf9f6fc15d4",
   gateway: "aciworldwide",
   allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
   merchantName: "Store Name here",
