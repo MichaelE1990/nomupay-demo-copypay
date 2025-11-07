@@ -2,7 +2,7 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
-const { ENTITY_ID, ACCESS_TOKEN, API_HOST } = require("./config");
+const { ENTITY_ID, ACCESS_TOKEN, API_HOST, SHOPPER_RESULT_URL } = require("./config");
 const app = express();
 
 // Serve static files
@@ -18,6 +18,7 @@ function prepareCheckout() {
     currency: "GBP",
     paymentType: "DB",
     integrity: "true",
+    shopperResultUrl: SHOPPER_RESULT_URL,
   }).toString();
 
   return fetch(BASE + "v1/checkouts", {
