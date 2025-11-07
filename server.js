@@ -57,10 +57,12 @@ app.get("/payment", async (req, res) => {
 
 function getPaymentStatus(resourcePath) {
   const rp = String(resourcePath || "").replace(/^\/+/, "");
-  const url = BASE + rp;
+  // Add entityId as query parameter
+  const url = `${BASE}${rp}?entityId=${encodeURIComponent(ENTITY_ID)}`;
 
   console.log("Fetching payment status from URL:", url);
-  console.log("Using entityId:", ENTITY_ID);
+  console.log("Resource path:", rp);
+  console.log("Entity ID:", ENTITY_ID);
 
   return fetch(url, {
     headers: {
