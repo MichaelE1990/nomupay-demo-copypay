@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 module.exports = {
   ENTITY_ID:        process.env.ENTITY_ID,
   ACCESS_TOKEN:     process.env.ACCESS_TOKEN,
