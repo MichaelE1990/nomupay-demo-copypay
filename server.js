@@ -41,6 +41,7 @@ app.get("/payment", async (req, res) => {
       "utf8"
     );
     html = html.replace(/{{checkoutId}}/g, checkoutId);
+    html = html.replace(/{{shopperResultUrl}}/g, SHOPPER_RESULT_URL);
 
     res.send(html);
   } catch (_) {
