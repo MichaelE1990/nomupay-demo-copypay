@@ -88,11 +88,12 @@ googlePay: {
 
   onPaymentDataChanged: function (intermediatePaymentData) {
     return new Promise(function(resolve) {
-      var paymentDataUpdate = {};
+      var paymentDataRequestUpdate = {};
 
       // Handle shipping option changes
       if (intermediatePaymentData.callbackTrigger === 'SHIPPING_OPTION') {
-        var selectedShippingOptionId = intermediatePaymentData.shippingOptionData.id;
+        var shippingOptionData = intermediatePaymentData.shippingOptionData;
+        var selectedShippingOptionId = shippingOptionData.id;
         var shippingCost = 0;
 
         // Determine shipping cost based on selected option
@@ -110,20 +111,46 @@ googlePay: {
         // Calculate new total
         var newTotal = subTotalAmount + shippingCost + taxAmount;
 
-        // Update transaction info with new total
-        paymentDataUpdate.newTransactionInfo = {
-          currencyCode: currency,
-          totalPriceStatus: 'FINAL',
-          totalPrice: (newTotal / 100).toFixed(2),
-          displayItems: [
-            { label: "Subtotal", type: "SUBTOTAL", price: (subTotalAmount / 100).toFixed(2) },
-            { label: "Shipping", type: "LINE_ITEM", price: (shippingCost / 100).toFixed(2) },
-            { label: "Tax", type: "TAX", price: (taxAmount / 100).toFixed(2) }
-          ]
+        console.log('SHIPPING_OPTION selected with id:', selectedShippingOptionId);
+        console.log('New total calculated:', (newTotal / 100).toFixed(2), currency);
+
+        // IMPORTANT: Return both newShippingOptionParameters AND newTransactionInfo
+        // per the official docs example
+        paymentDataRequestUpdate = {
+          newShippingOptionParameters: {
+            defaultSelectedOptionId: selectedShippingOptionId,
+            shippingOptions: [
+              {
+                id: "shipping-001",
+                label: "Free: Standard shipping",
+                description: "Free shipping delivered in 5 business days."
+              },
+              {
+                id: "shipping-002",
+                label: "£1.99: Standard shipping",
+                description: "Standard shipping delivered in 3 business days."
+              },
+              {
+                id: "shipping-003",
+                label: "£10.00: Express shipping",
+                description: "Express shipping delivered in 1 business day."
+              }
+            ]
+          },
+          newTransactionInfo: {
+            currencyCode: currency,
+            totalPriceStatus: 'FINAL',
+            totalPrice: (newTotal / 100).toFixed(2),
+            displayItems: [
+              { label: "Subtotal", type: "SUBTOTAL", price: (subTotalAmount / 100).toFixed(2) },
+              { label: "Shipping", type: "LINE_ITEM", price: (shippingCost / 100).toFixed(2) },
+              { label: "Tax", type: "TAX", price: (taxAmount / 100).toFixed(2) }
+            ]
+          }
         };
       }
 
-      resolve(paymentDataUpdate);
+      resolve(paymentDataRequestUpdate);
     });
   },
 
