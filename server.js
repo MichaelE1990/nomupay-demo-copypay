@@ -63,13 +63,16 @@ async function getPaymentStatus(resourcePath) {
   // Remove leading slashes
   const cleanPath = decodedPath.replace(/^\/+/, "");
 
-  // Build the full URL with entityId as query parameter
-  const url = `${BASE_URL}${cleanPath}?entityId=${ENTITY_ID}`;
+  // Build the full URL - try WITHOUT entityId first
+  const url = `${BASE_URL}${cleanPath}`;
 
   console.log("Fetching payment status:");
   console.log("  Original resourcePath:", resourcePath);
   console.log("  Decoded path:", decodedPath);
+  console.log("  Clean path:", cleanPath);
   console.log("  Final URL:", url);
+  console.log("  EntityId:", ENTITY_ID);
+  console.log("  Using Authorization:", ACCESS_TOKEN ? `Bearer ${ACCESS_TOKEN.substring(0, 20)}...` : 'MISSING');
 
   const response = await fetch(url, {
     method: "GET",
@@ -79,13 +82,7 @@ async function getPaymentStatus(resourcePath) {
   });
 
   const data = await response.json();
-  console.log("Payment status response:", {
-    resultCode: data.result?.code,
-    resultDescription: data.result?.description,
-    paymentBrand: data.paymentBrand,
-    amount: data.amount,
-    currency: data.currency,
-  });
+  console.log("Payment status response:", JSON.stringify(data, null, 2));
 
   return data;
 }
@@ -95,6 +92,20 @@ async function getPaymentStatus(resourcePath) {
  */
 app.get("/", (req, res) => {
   res.redirect("/payment");
+});
+
+/**
+ * Route: Debug - Check environment variables (remove in production)
+ */
+app.get("/debug/env", (req, res) => {
+  res.json({
+    entityIdSet: !!ENTITY_ID,
+    entityIdValue: ENTITY_ID ? `${ENTITY_ID.substring(0, 8)}...` : 'MISSING',
+    accessTokenSet: !!ACCESS_TOKEN,
+    apiHost: API_HOST,
+    baseUrl: BASE_URL,
+    nodeEnv: process.env.NODE_ENV,
+  });
 });
 
 /**
