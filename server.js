@@ -18,7 +18,6 @@ function prepareCheckout() {
     currency: "GBP",
     paymentType: "DB",
     integrity: "true",
-    shopperResultUrl: SHOPPER_RESULT_URL,
   }).toString();
 
   return fetch(BASE + "v1/checkouts", {
@@ -34,17 +33,24 @@ function prepareCheckout() {
 app.get("/payment", async (req, res) => {
   try {
     const prep = await prepareCheckout();
+    console.log("Checkout preparation response:", JSON.stringify(prep, null, 2));
+
     const checkoutId = prep?.id || "";
+
+    if (!checkoutId) {
+      console.error("No checkout ID received from API");
+      return res.status(500).send("Could not initialize payment - no checkout ID received.");
+    }
 
     let html = fs.readFileSync(
       path.join(__dirname, "public", "payment.html"),
       "utf8"
     );
     html = html.replace(/{{checkoutId}}/g, checkoutId);
-    html = html.replace(/{{shopperResultUrl}}/g, SHOPPER_RESULT_URL);
 
     res.send(html);
-  } catch (_) {
+  } catch (err) {
+    console.error("Payment initialization error:", err);
     res.status(500).send("Could not initialize payment.");
   }
 });
