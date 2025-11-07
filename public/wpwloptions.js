@@ -104,6 +104,9 @@ googlePay: {
           shippingCost = 1000; // £10.00 in pence
         }
 
+        // Store the selected shipping cost globally
+        window.selectedShippingCost = shippingCost;
+
         // Calculate new total
         var newTotal = subTotalAmount + shippingCost + taxAmount;
 
@@ -124,9 +127,35 @@ googlePay: {
     });
   },
 
+  onBeforeSubmit: function() {
+    // Update the checkout amount with the final total before submitting
+    var finalShippingCost = window.selectedShippingCost || 0;
+    var finalTotal = subTotalAmount + finalShippingCost + taxAmount;
+
+    console.log("Final Google Pay amount:", {
+      subtotal: subTotalAmount,
+      shipping: finalShippingCost,
+      tax: taxAmount,
+      total: finalTotal,
+      totalInGBP: (finalTotal / 100).toFixed(2)
+    });
+
+    // Note: The COPYandPAY widget doesn't allow changing the checkout amount
+    // after it's created. You would need to create a new checkout with the
+    // correct amount, or handle this server-side with amount validation.
+
+    return true;
+  },
+
   // No card brand restriction, always succeed for now
   onPaymentAuthorized: function (paymentData) {
-    console.log("onPaymentAuthorized:", paymentData);
+    console.log("onPaymentAuthorized - Full payment data:", paymentData);
+
+    // Log the transaction info to see what amount was authorized
+    if (paymentData.transactionInfo) {
+      console.log("Transaction amount authorized:", paymentData.transactionInfo.totalPrice);
+    }
+
     return Promise.resolve({ transactionState: "SUCCESS" });
   }
 },
