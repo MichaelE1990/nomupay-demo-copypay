@@ -57,23 +57,32 @@ app.get("/payment", async (req, res) => {
 
 function getPaymentStatus(resourcePath) {
   const rp = String(resourcePath || "").replace(/^\/+/, "");
-  const url = BASE + rp + `?entityId=${encodeURIComponent(ENTITY_ID)}`;
+  const url = BASE + rp;
+
+  console.log("Fetching payment status from URL:", url);
+  console.log("Using entityId:", ENTITY_ID);
 
   return fetch(url, {
-    headers: { Authorization: `Bearer ${ACCESS_TOKEN}` },
+    headers: {
+      Authorization: `Bearer ${ACCESS_TOKEN}`,
+    },
   }).then((r) => r.json());
 }
 
 app.get("/result", async (req, res) => {
   const resourcePath = req.query.resourcePath;
+  console.log("Result endpoint called with resourcePath:", resourcePath);
+
   if (!resourcePath) {
     return res.status(400).send("Missing resourcePath query parameter.");
   }
 
   try {
     const status = await getPaymentStatus(resourcePath);
+    console.log("Payment status response:", JSON.stringify(status, null, 2));
     res.json(status);
-  } catch (_) {
+  } catch (err) {
+    console.error("Could not fetch payment status:", err);
     res.status(500).send("Could not fetch payment status.");
   }
 });
