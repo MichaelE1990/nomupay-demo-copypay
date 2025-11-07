@@ -42,14 +42,11 @@ var wpwlOptions = {
       gatewayMerchantId: "8ac7a4c781a732090181aaf9f6fc15d4",
       merchantId: "BCR2DN4TTWM4FDYB",
       allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
-      billingAddressRequired: true,
       submitOnPaymentAuthorized: ["customer", "billing"],
       merchantName: "Nomupay Demo",
 	  buttonColor: "white",
 	  buttonType: "pay",
 	  buttonSizeMode: "fill",
-	  billingAddressRequired: true,
-	  billingAddressParameters : { "format": "FULL", phoneNumberRequired : true },
 	  
 	  
 	},
