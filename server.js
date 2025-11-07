@@ -140,28 +140,118 @@ app.get("/payment", async (req, res) => {
 });
 
 /**
- * Route: Result API - Fetch payment status from gateway
+ * Route: Payment Result - Server-side rendering of payment status
  */
-app.get("/result", async (req, res) => {
+app.get("/paymentresult", async (req, res) => {
   const resourcePath = req.query.resourcePath;
+  const checkoutId = req.query.id;
 
-  console.log("Result API called with resourcePath:", resourcePath);
+  console.log("Payment result page accessed:");
+  console.log("  Checkout ID:", checkoutId);
+  console.log("  Resource Path:", resourcePath);
 
   if (!resourcePath) {
-    console.error("Missing resourcePath parameter");
-    return res.status(400).json({
-      error: "Missing resourcePath query parameter"
-    });
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Payment Result</title>
+        <link rel="stylesheet" href="styles.css">
+      </head>
+      <body>
+        <div class="container">
+          <h1>Payment Result</h1>
+          <p style="color: red;">Error: Missing payment information</p>
+          <p><a href="/payment">Try again</a></p>
+        </div>
+      </body>
+      </html>
+    `);
   }
 
   try {
     const status = await getPaymentStatus(resourcePath);
-    res.json(status);
-  } catch (error) {
-    console.error("Could not fetch payment status:", error);
-    res.status(500).json({
-      error: "Could not fetch payment status"
+
+    console.log("Rendering payment result:", {
+      code: status.result?.code,
+      description: status.result?.description
     });
+
+    const isSuccess = status.result?.code?.startsWith('000.');
+    const statusColor = isSuccess ? 'green' : 'red';
+
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Payment Result</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="styles.css">
+        <style>
+          .success { color: green; }
+          .error { color: red; }
+          .result-box {
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin: 20px 0;
+          }
+          .debug {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            font-family: monospace;
+            font-size: 12px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>Payment Result</h1>
+
+          <div class="result-box">
+            <p><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${status.result?.description || 'Unknown'}</span></p>
+            <p><strong>Code:</strong> ${status.result?.code || 'N/A'}</p>
+            ${status.paymentBrand ? `<p><strong>Payment Method:</strong> ${status.paymentBrand}</p>` : ''}
+            ${status.amount ? `<p><strong>Amount:</strong> ${status.amount} ${status.currency || ''}</p>` : ''}
+            ${status.id ? `<p><strong>Transaction ID:</strong> ${status.id}</p>` : ''}
+          </div>
+
+          <p><a href="/payment">Make another payment</a></p>
+
+          <details class="debug">
+            <summary>Debug Information (click to expand)</summary>
+            <pre>${JSON.stringify({
+              checkoutId,
+              resourcePath,
+              entityId: ENTITY_ID,
+              fullResponse: status
+            }, null, 2)}</pre>
+          </details>
+        </div>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error("Error fetching payment status:", error);
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Payment Result</title>
+        <link rel="stylesheet" href="styles.css">
+      </head>
+      <body>
+        <div class="container">
+          <h1>Payment Result</h1>
+          <p style="color: red;">Error: Could not fetch payment status</p>
+          <p>${error.message}</p>
+          <p><a href="/payment">Try again</a></p>
+        </div>
+      </body>
+      </html>
+    `);
   }
 });
 
