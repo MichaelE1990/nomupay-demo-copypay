@@ -63,15 +63,15 @@ async function getPaymentStatus(resourcePath) {
   // Remove leading slashes
   const cleanPath = decodedPath.replace(/^\/+/, "");
 
-  // Build the full URL - try WITHOUT entityId first
-  const url = `${BASE_URL}${cleanPath}`;
+  // Build the full URL with entityId as query parameter (required by API)
+  const url = `${BASE_URL}${cleanPath}?entityId=${encodeURIComponent(ENTITY_ID)}`;
 
   console.log("Fetching payment status:");
   console.log("  Original resourcePath:", resourcePath);
   console.log("  Decoded path:", decodedPath);
   console.log("  Clean path:", cleanPath);
-  console.log("  Final URL:", url);
   console.log("  EntityId:", ENTITY_ID);
+  console.log("  Final URL:", url);
   console.log("  Using Authorization:", ACCESS_TOKEN ? `Bearer ${ACCESS_TOKEN.substring(0, 20)}...` : 'MISSING');
 
   const response = await fetch(url, {
