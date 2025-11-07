@@ -15,42 +15,141 @@
           font-src    'self' https://applepay.cdn-apple.com https://fonts.googleapis.com https://fonts.gstatic.com;
         ">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .success { color: green; }
+    .error { color: red; }
+    .pending { color: orange; }
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+    .debug {
+      margin-top: 30px;
+      padding: 15px;
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .debug h3 {
+      margin-top: 0;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <h1>Payment Result</h1>
-    <p><strong>Status Code:</strong> <span id="statusCode"></span></p>
-    <p><strong>Description:</strong> <span id="statusDescription"></span></p>
-    <p><strong>Brand:</strong> <span id="paymentBrand"></span></p>
-    <p><strong>Amount:</strong> <span id="amount"></span> <span id="currency"></span></p>
+
+    <div id="loading" class="loading">
+      <p>Loading payment status...</p>
+    </div>
+
+    <div id="result" style="display: none;">
+      <p><strong>Status Code:</strong> <span id="statusCode"></span></p>
+      <p><strong>Description:</strong> <span id="statusDescription"></span></p>
+      <p><strong>Brand:</strong> <span id="paymentBrand"></span></p>
+      <p><strong>Amount:</strong> <span id="amount"></span> <span id="currency"></span></p>
+      <p><strong>Transaction ID:</strong> <span id="transactionId"></span></p>
+    </div>
+
+    <div id="error" style="display: none;">
+      <p class="error"><strong>Error:</strong> <span id="errorMessage"></span></p>
+    </div>
+
+    <div class="debug" id="debug" style="display: none;">
+      <h3>Debug Information</h3>
+      <pre id="debugInfo"></pre>
+    </div>
+
+    <p style="margin-top: 30px;">
+      <a href="/payment">Make another payment</a>
+    </p>
   </div>
-<script>
-  (async () => {
-    const el = (id) => document.getElementById(id);
-    const params = new URLSearchParams(location.search);
-    const resourcePath = params.get('resourcePath');
 
-    if (!resourcePath) {
-      el('statusCode').textContent = '—';
-      el('statusDescription').textContent = 'Missing resourcePath';
-      return;
-    }
+  <script>
+    (async () => {
+      const el = (id) => document.getElementById(id);
+      const params = new URLSearchParams(location.search);
+      const resourcePath = params.get('resourcePath');
+      const checkoutId = params.get('id');
 
-    try {
-      const resp = await fetch(`/result?resourcePath=${encodeURIComponent(resourcePath)}`);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
+      // Debug logging
+      const debugInfo = {
+        url: location.href,
+        resourcePath: resourcePath,
+        checkoutId: checkoutId,
+        allParams: Object.fromEntries(params)
+      };
+      console.log('Payment result page loaded:', debugInfo);
 
-      el('statusCode').textContent = (data.result && data.result.code) || '';
-      el('statusDescription').textContent = (data.result && data.result.description) || '';
-      el('paymentBrand').textContent = data.paymentBrand || '';
-      el('amount').textContent = data.amount || '';
-      el('currency').textContent = data.currency || '';
-    } catch (e) {
-      el('statusCode').textContent = '';
-      el('statusDescription').textContent = 'Failed to load payment status';
-    }
-  })();
+      if (!resourcePath) {
+        el('loading').style.display = 'none';
+        el('error').style.display = 'block';
+        el('errorMessage').textContent = 'Missing resourcePath parameter. The payment may not have been completed.';
+        el('debug').style.display = 'block';
+        el('debugInfo').textContent = JSON.stringify(debugInfo, null, 2);
+        return;
+      }
+
+      try {
+        console.log('Fetching payment status from /result API...');
+        const resp = await fetch(`/result?resourcePath=${encodeURIComponent(resourcePath)}`);
+
+        if (!resp.ok) {
+          throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+        }
+
+        const data = await resp.json();
+        console.log('Payment status received:', data);
+
+        // Hide loading
+        el('loading').style.display = 'none';
+
+        // Check if we got a valid response
+        if (data.result) {
+          el('result').style.display = 'block';
+
+          const code = data.result.code || '';
+          const description = data.result.description || '';
+
+          el('statusCode').textContent = code;
+          el('statusDescription').textContent = description;
+          el('paymentBrand').textContent = data.paymentBrand || 'N/A';
+          el('amount').textContent = data.amount || '';
+          el('currency').textContent = data.currency || '';
+          el('transactionId').textContent = data.id || 'N/A';
+
+          // Color code based on result
+          const statusEl = el('statusDescription');
+          if (code.startsWith('000.')) {
+            statusEl.className = 'success';
+          } else if (code.startsWith('800.')) {
+            statusEl.className = 'pending';
+          } else {
+            statusEl.className = 'error';
+          }
+
+          // Show debug info
+          debugInfo.response = data;
+          el('debug').style.display = 'block';
+          el('debugInfo').textContent = JSON.stringify(debugInfo, null, 2);
+        } else {
+          // No result object in response
+          throw new Error('Invalid response format from server');
+        }
+      } catch (e) {
+        console.error('Error fetching payment status:', e);
+        el('loading').style.display = 'none';
+        el('error').style.display = 'block';
+        el('errorMessage').textContent = `Failed to load payment status: ${e.message}`;
+        debugInfo.error = e.toString();
+        el('debug').style.display = 'block';
+        el('debugInfo').textContent = JSON.stringify(debugInfo, null, 2);
+      }
+    })();
   </script>
 </body>
 </html>
