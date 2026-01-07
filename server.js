@@ -2,8 +2,13 @@ require('dotenv').config();
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 const app = express();
+
+// Middleware for parsing request bodies
+app.use(express.json());
+app.use(express.text({ type: 'text/plain' }));
 
 // Serve static files
 app.use(express.static(path.join(__dirname, "public")));
@@ -13,6 +18,7 @@ const ENTITY_ID = process.env.ENTITY_ID;
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
 const API_HOST = process.env.API_HOST || "eu-test.oppwa.com";
 const BASE_URL = `https://${API_HOST}/`;
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 
 // Validate required environment variables
 if (!ENTITY_ID || !ACCESS_TOKEN) {
@@ -20,6 +26,10 @@ if (!ENTITY_ID || !ACCESS_TOKEN) {
   console.error("Required: ENTITY_ID, ACCESS_TOKEN");
   console.error("Current ENTITY_ID:", ENTITY_ID ? "Set" : "MISSING");
   console.error("Current ACCESS_TOKEN:", ACCESS_TOKEN ? "Set" : "MISSING");
+}
+
+if (!WEBHOOK_SECRET) {
+  console.warn("WARNING: WEBHOOK_SECRET not set. Webhook endpoint will not work.");
 }
 
 /**
@@ -85,6 +95,101 @@ async function getPaymentStatus(resourcePath) {
   console.log("Payment status response:", JSON.stringify(data, null, 2));
 
   return data;
+}
+
+/**
+ * Decrypt webhook payload using AES-256-GCM
+ */
+function decryptWebhook(encryptedBody, iv, authTag, secret) {
+  try {
+    const key = Buffer.from(secret, "hex");
+    const ivBuffer = Buffer.from(iv, "hex");
+    const authTagBuffer = Buffer.from(authTag, "hex");
+    const cipherText = Buffer.from(encryptedBody, "hex");
+
+    const decipher = crypto.createDecipheriv("aes-256-gcm", key, ivBuffer);
+    decipher.setAuthTag(authTagBuffer);
+
+    const decrypted = Buffer.concat([
+      decipher.update(cipherText),
+      decipher.final()
+    ]);
+
+    return decrypted.toString("utf8");
+  } catch (error) {
+    console.error("Decryption error:", error);
+    throw new Error(`Failed to decrypt webhook: ${error.message}`);
+  }
+}
+
+/**
+ * Process webhook notification and determine actions
+ */
+function processWebhookNotification(notification) {
+  const { type, action, payload } = notification;
+
+  console.log("\n=== WEBHOOK NOTIFICATION RECEIVED ===");
+  console.log("Type:", type);
+  console.log("Action:", action || "N/A");
+  console.log("Payload:", JSON.stringify(payload, null, 2));
+
+  // What you should do based on notification type:
+  switch (type) {
+    case "PAYMENT":
+      console.log("\n📌 PAYMENT NOTIFICATION - Recommended Actions:");
+      console.log("  1. Update your database with payment status");
+      console.log("  2. Send confirmation email to customer");
+      console.log("  3. Update order status in your system");
+      console.log("  4. Trigger fulfillment if payment successful");
+
+      if (payload.result?.code?.startsWith('000.')) {
+        console.log("  ✅ Payment SUCCESSFUL - Proceed with order fulfillment");
+        console.log("     Transaction ID:", payload.id);
+        console.log("     Amount:", payload.amount, payload.currency);
+        console.log("     Payment Brand:", payload.paymentBrand);
+      } else {
+        console.log("  ❌ Payment FAILED - Do NOT fulfill order");
+        console.log("     Reason:", payload.result?.description);
+      }
+      break;
+
+    case "REGISTRATION":
+      console.log("\n📌 REGISTRATION NOTIFICATION - Recommended Actions:");
+      console.log("  1. Store/update card token in your database");
+      console.log("  2. Associate token with customer account");
+      console.log("  3. Update subscription status if applicable");
+
+      if (action === "CREATED") {
+        console.log("  ✅ New card registered");
+        console.log("     Registration ID:", payload.id);
+      } else if (action === "UPDATED") {
+        console.log("  🔄 Card details updated");
+      } else if (action === "DELETED") {
+        console.log("  🗑️  Card removed - Clean up references");
+      }
+      break;
+
+    case "RISK":
+      console.log("\n📌 RISK NOTIFICATION - Recommended Actions:");
+      console.log("  1. Review transaction for potential fraud");
+      console.log("  2. Hold order until manual review");
+      console.log("  3. Consider requesting additional verification");
+      break;
+
+    default:
+      console.log("\n📌 UNKNOWN NOTIFICATION TYPE");
+      console.log("  Review the payload manually");
+  }
+
+  console.log("=====================================\n");
+
+  return {
+    processed: true,
+    type,
+    action,
+    transactionId: payload.id,
+    status: payload.result?.code
+  };
 }
 
 /**
@@ -252,6 +357,88 @@ app.get("/paymentresult", async (req, res) => {
       </body>
       </html>
     `);
+  }
+});
+
+/**
+ * Route: Webhook endpoint - Receive and process encrypted webhook notifications
+ */
+app.post("/webhook", async (req, res) => {
+  try {
+    console.log("\n🔔 Webhook request received");
+    console.log("Headers:", JSON.stringify(req.headers, null, 2));
+
+    // Validate webhook secret is configured
+    if (!WEBHOOK_SECRET) {
+      console.error("❌ WEBHOOK_SECRET not configured");
+      return res.status(500).send("Webhook secret not configured");
+    }
+
+    // Extract encryption headers
+    const iv = req.headers['x-initialization-vector'];
+    const authTag = req.headers['x-authentication-tag'];
+
+    if (!iv || !authTag) {
+      console.error("❌ Missing required headers");
+      return res.status(400).send("Missing encryption headers");
+    }
+
+    // Get encrypted body (handle both JSON wrapper and raw hex)
+    let encryptedBody;
+    if (req.is('application/json')) {
+      // JSON wrapper format: {"encryptedBody": "hex_string"}
+      encryptedBody = req.body.encryptedBody;
+      console.log("📦 JSON wrapper format detected");
+    } else {
+      // Raw hex string format
+      encryptedBody = req.body;
+      console.log("📦 Raw hex format detected");
+    }
+
+    if (!encryptedBody) {
+      console.error("❌ No encrypted body found");
+      return res.status(400).send("Missing encrypted body");
+    }
+
+    console.log("🔐 Decrypting webhook payload...");
+
+    // Decrypt the webhook
+    const decryptedData = decryptWebhook(encryptedBody, iv, authTag, WEBHOOK_SECRET);
+    const notification = JSON.parse(decryptedData);
+
+    // Process the notification
+    const result = processWebhookNotification(notification);
+
+    // TODO: Add your business logic here
+    // Examples:
+    // - Save to database
+    // - Send emails
+    // - Update order status
+    // - Trigger fulfillment
+    // - Update subscription status
+
+    // Respond with 200 OK to acknowledge receipt
+    // (Must respond within 30 seconds or webhook will retry)
+    res.status(200).json({
+      received: true,
+      processed: result.processed,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error("❌ Webhook processing error:", error);
+
+    // Still return 200 if it's a processing error (not decryption)
+    // This prevents unnecessary retries for data we can't process
+    if (error.message.includes("decrypt")) {
+      res.status(400).send("Decryption failed");
+    } else {
+      res.status(200).json({
+        received: true,
+        processed: false,
+        error: "Processing failed"
+      });
+    }
   }
 });
 
