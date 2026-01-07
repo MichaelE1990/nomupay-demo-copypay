@@ -32,6 +32,9 @@ if (!WEBHOOK_SECRET) {
   console.warn("WARNING: WEBHOOK_SECRET not set. Webhook endpoint will not work.");
 }
 
+// Store recent webhooks in memory (for viewing/debugging)
+const recentWebhooks = [];
+
 /**
  * Prepare a checkout session with the payment gateway
  */
@@ -361,6 +364,109 @@ app.get("/paymentresult", async (req, res) => {
 });
 
 /**
+ * Route: View received webhooks - Debug page to see webhook data
+ */
+app.get("/webhooks/view", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Webhook Monitor</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" href="styles.css">
+      <style>
+        .webhook-item {
+          border: 2px solid #ddd;
+          border-radius: 8px;
+          padding: 15px;
+          margin: 15px 0;
+          background: #f9f9f9;
+        }
+        .webhook-success { border-color: #4CAF50; }
+        .webhook-failed { border-color: #f44336; }
+        .timestamp {
+          color: #666;
+          font-size: 14px;
+          font-family: monospace;
+        }
+        .payload {
+          background: #fff;
+          padding: 10px;
+          border-radius: 4px;
+          margin-top: 10px;
+          font-family: monospace;
+          font-size: 12px;
+          overflow-x: auto;
+        }
+        .empty {
+          text-align: center;
+          padding: 40px;
+          color: #999;
+        }
+        .refresh-btn {
+          background: #4CAF50;
+          color: white;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          margin: 10px 0;
+        }
+      </style>
+      <script>
+        function autoRefresh() {
+          setTimeout(() => window.location.reload(), 5000);
+        }
+      </script>
+    </head>
+    <body onload="autoRefresh()">
+      <div class="container">
+        <h1>Webhook Monitor</h1>
+        <p>This page shows the last 50 webhooks received. Auto-refreshes every 5 seconds.</p>
+        <button class="refresh-btn" onclick="window.location.reload()">Refresh Now</button>
+        <p><strong>Total Received:</strong> ${recentWebhooks.length}</p>
+
+        ${recentWebhooks.length === 0 ? `
+          <div class="empty">
+            <h2>No webhooks received yet</h2>
+            <p>Make a test payment to see webhook data here</p>
+            <p><a href="/payment">Go to Payment Page</a></p>
+          </div>
+        ` : recentWebhooks.map((webhook, index) => {
+          const isSuccess = webhook.notification.payload?.result?.code?.startsWith('000.');
+          return `
+            <div class="webhook-item ${isSuccess ? 'webhook-success' : 'webhook-failed'}">
+              <div class="timestamp">
+                <strong>#${index + 1}</strong> - ${webhook.timestamp}
+              </div>
+              <p><strong>Type:</strong> ${webhook.notification.type}</p>
+              ${webhook.notification.action ? `<p><strong>Action:</strong> ${webhook.notification.action}</p>` : ''}
+              <p><strong>Status:</strong> <span style="color: ${isSuccess ? 'green' : 'red'}; font-weight: bold;">
+                ${webhook.notification.payload?.result?.description || 'N/A'}
+              </span></p>
+              <p><strong>Transaction ID:</strong> ${webhook.notification.payload?.id || 'N/A'}</p>
+              ${webhook.notification.payload?.amount ? `
+                <p><strong>Amount:</strong> ${webhook.notification.payload.amount} ${webhook.notification.payload.currency}</p>
+              ` : ''}
+              ${webhook.notification.payload?.paymentBrand ? `
+                <p><strong>Payment Brand:</strong> ${webhook.notification.payload.paymentBrand}</p>
+              ` : ''}
+              <details>
+                <summary>View Full Payload</summary>
+                <pre class="payload">${JSON.stringify(webhook.notification, null, 2)}</pre>
+              </details>
+            </div>
+          `;
+        }).join('')}
+
+        <p><a href="/payment">Make Another Payment</a></p>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+/**
  * Route: Webhook endpoint - Receive and process encrypted webhook notifications
  */
 app.post("/webhook", async (req, res) => {
@@ -408,6 +514,16 @@ app.post("/webhook", async (req, res) => {
 
     // Process the notification
     const result = processWebhookNotification(notification);
+
+    // Store webhook for viewing (keep last 50)
+    recentWebhooks.unshift({
+      timestamp: new Date().toISOString(),
+      notification,
+      result
+    });
+    if (recentWebhooks.length > 50) {
+      recentWebhooks.pop();
+    }
 
     // TODO: Add your business logic here
     // Examples:
