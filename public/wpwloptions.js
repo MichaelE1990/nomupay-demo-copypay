@@ -110,7 +110,6 @@ googlePay: {
 
         // Calculate new total
         var newTotal = subTotalAmount + shippingCost + taxAmount;
-
         console.log('SHIPPING_OPTION selected with id:', selectedShippingOptionId);
         console.log('New total calculated:', (newTotal / 100).toFixed(2), currency);
 
