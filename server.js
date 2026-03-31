@@ -80,7 +80,7 @@ const body = new URLSearchParams({
 "customParameters[KLARNA_OPTIONS_colorCheckbox]":          "#111827",
 "customParameters[KLARNA_OPTIONS_colorCheckboxCheckmark]": "#ffffff",
 "customParameters[KLARNA_OPTIONS_radiusBorder]":           "8px",
-"customParameters[KLARNA_OPTIONS_logoAlignment]":          "Center",
+"customParameters[KLARNA_OPTIONS_logoAlignment]":          "Left",
 "customParameters[KLARNA_OPTIONS_purchaseType]":           "Buy",
 }).toString();
 
