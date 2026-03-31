@@ -36,10 +36,11 @@ var wpwlOptions = {
   labels: {
     submit: "Process Payment"
   },
+
+  // ✅ FIX: Tell the widget to render Klarna inline rather than skipping it
   inlineFlow: ["KLARNA_PAYMENTS_ONE"],
 
   onReady: function(){
-    // ── Card brand reordering (existing) ──────────────────────────────────
     $(".wpwl-group-cardNumber").after($(".wpwl-group-brand").detach());
     $(".wpwl-group-cvv").after($(".wpwl-group-cardHolder").detach());
     var visa = $(".wpwl-brand:first").clone().removeAttr("class").attr("class", "wpwl-brand-card wpwl-brand-custom wpwl-brand-VISA");
@@ -47,35 +48,6 @@ var wpwlOptions = {
     $(".wpwl-brand:first").after($(master)).after($(visa));
     var imageUrl = "https://eu-test.oppwa.com/v1/static/" + wpwl.cacheVersion + "/img/brand.png";
     $(".wpwl-brand-custom").css("background-image", "url(" + imageUrl + ")");
-
-    // ── Klarna UI enhancements ─────────────────────────────────────────────
-    var $klarnaContainer = $(".wpwl-container-virtualAccountKLARNA_PAYMENTS_ONE");
-    if ($klarnaContainer.length) {
-
-      // 1. Divider above the Klarna card
-      $klarnaContainer.before(
-        '<div class="klarna-divider">or pay with Klarna</div>'
-      );
-
-      // 2. Header row inside the card: tagline + "0% interest" badge
-      $klarnaContainer.prepend(
-        '<div class="klarna-header">' +
-          '<span class="klarna-tagline">Buy now, pay later</span>' +
-          '<span class="klarna-badge">0% interest</span>' +
-        '</div>'
-      );
-
-      // 3. Info footer below the button
-      $klarnaContainer.append(
-        '<div class="klarna-footer">' +
-          '<svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-            '<circle cx="6.5" cy="6.5" r="6" stroke="#d1d5db"/>' +
-            '<path d="M6.5 6v3.5M6.5 3.5V5" stroke="#d1d5db" stroke-width="1.2" stroke-linecap="round"/>' +
-          '</svg>' +
-          'Split into 3 interest-free payments. No hidden fees. Managed by Klarna.' +
-        '</div>'
-      );
-    }
   },
 
   googlePay: {
