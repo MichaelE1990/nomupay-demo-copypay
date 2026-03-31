@@ -1,15 +1,1 @@
 
-/* Make the Klarna container border dark instead of light grey */
-.wpwl-container-virtualAccount-KLARNA_PAYMENTS_ONE {
-  border: 2px solid #111827;
-  border-radius: 12px;
-  padding: 16px;
-}
-
-/* Make the Klarna button full width and dark */
-.wpwl-container-virtualAccount-KLARNA_PAYMENTS_ONE .wpwl-button-brand {
-  width: 100%;
-  background: #111827;
-  border-radius: 8px;
-  padding: 12px;
-}
