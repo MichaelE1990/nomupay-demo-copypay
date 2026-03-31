@@ -37,7 +37,6 @@ var wpwlOptions = {
     submit: "Process Payment"
   },
 
-  // ✅ FIX: Tell the widget to render Klarna inline rather than skipping it
   inlineFlow: ["KLARNA_PAYMENTS_ONE"],
 
   onReady: function(){
