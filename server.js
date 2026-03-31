@@ -68,6 +68,20 @@ const body = new URLSearchParams({
   "cart.items[0].tax": "0",
   "cart.items[0].totalAmount": "12.99",
   "cart.items[0].totalTaxAmount": "0",
+  "customParameters[KLARNA_OPTIONS_colorButton]":            "111827",
+"customParameters[KLARNA_OPTIONS_colorButtonText]":        "ffffff",
+"customParameters[KLARNA_OPTIONS_colorBorder]":            "d1d5db",
+"customParameters[KLARNA_OPTIONS_colorBorderSelected]":    "111827",
+"customParameters[KLARNA_OPTIONS_colorText]":              "111827",
+"customParameters[KLARNA_OPTIONS_colorTextSecondary]":     "6b7280",
+"customParameters[KLARNA_OPTIONS_colorLink]":              "4f46e5",
+"customParameters[KLARNA_OPTIONS_colorHeader]":            "111827",
+"customParameters[KLARNA_OPTIONS_colorDetails]":           "6b7280",
+"customParameters[KLARNA_OPTIONS_colorCheckbox]":          "111827",
+"customParameters[KLARNA_OPTIONS_colorCheckboxCheckmark]": "ffffff",
+"customParameters[KLARNA_OPTIONS_radiusBorder]":           "8px",
+"customParameters[KLARNA_OPTIONS_logoAlignment]":          "Left",
+"customParameters[KLARNA_OPTIONS_purchaseType]":           "Buy",
 }).toString();
 
   console.log("Preparing checkout with entityId:", ENTITY_ID);
