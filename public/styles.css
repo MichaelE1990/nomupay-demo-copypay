@@ -87,24 +87,4 @@
   transform: scale(0.99);
 }
 
-/* Screen-reader-only span inside the button */
-.wpwl-form-virtualAccount-KLARNA_PAYMENTS_ONE .wpwl-sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0,0,0,0);
-  border: 0;
-}
 
-/* The Klarna logo div — let the widget render its background-image */
-.wpwl-brand-KLARNA_PAYMENTS_ONE {
-  width: 80px;
-  height: 32px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  filter: brightness(0); /* makes any logo dark — readable on pink */
-}
