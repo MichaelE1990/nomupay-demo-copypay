@@ -1,0 +1,224 @@
+/* =============================================
+   BASE RESET & PAGE
+   ============================================= */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
+  background: #f4f4f6;
+  color: #111827;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 48px 16px;
+}
+
+.container {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 20px rgba(0,0,0,0.08);
+  padding: 36px 32px;
+  width: 100%;
+  max-width: 480px;
+}
+
+h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 28px;
+  letter-spacing: -0.01em;
+}
+
+/* =============================================
+   WIDGET — GLOBAL OVERRIDES
+   ============================================= */
+.wpwl-form {
+  font-family: inherit;
+}
+
+.wpwl-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.wpwl-control {
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 15px;
+  color: #111827;
+  background: #fff;
+  transition: border-color 0.15s;
+  outline: none;
+  width: 100%;
+}
+
+.wpwl-control:focus {
+  border-color: #6366f1;
+}
+
+.wpwl-button-pay {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  background: #111827;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+  letter-spacing: 0.01em;
+}
+
+.wpwl-button-pay:hover {
+  background: #1f2937;
+}
+
+/* =============================================
+   KLARNA — SECTION DIVIDER
+   Injected by onReady above the Klarna container
+   ============================================= */
+.klarna-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0 16px;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.klarna-divider::before,
+.klarna-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+/* =============================================
+   KLARNA — CONTAINER CARD
+   .wpwl-container-virtualAccount{brand_name}
+   ============================================= */
+.wpwl-container-virtualAccountKLARNA_PAYMENTS_ONE {
+  border: 1.5px solid #fcd5e4;
+  border-radius: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fffafc 0%, #fff5f8 100%);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.wpwl-container-virtualAccountKLARNA_PAYMENTS_ONE:hover {
+  border-color: #f9a8cb;
+  box-shadow: 0 2px 12px rgba(255, 100, 160, 0.1);
+}
+
+/* =============================================
+   KLARNA — HEADER BLOCK
+   Injected by onReady inside the container
+   ============================================= */
+.klarna-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.klarna-tagline {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.klarna-badge {
+  font-size: 11px;
+  font-weight: 600;
+  background: #ffe0ed;
+  color: #9d174d;
+  padding: 3px 9px;
+  border-radius: 100px;
+  letter-spacing: 0.03em;
+}
+
+/* =============================================
+   KLARNA — BUTTON
+   .wpwl-button-brand (inside Klarna form)
+   ============================================= */
+.wpwl-form-virtualAccount-KLARNA_PAYMENTS_ONE .wpwl-group-button {
+  margin: 0;
+}
+
+.wpwl-form-virtualAccount-KLARNA_PAYMENTS_ONE .wpwl-button-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 54px;
+  background: #ffb3c7;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 10px 16px;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.wpwl-form-virtualAccount-KLARNA_PAYMENTS_ONE .wpwl-button-brand:hover {
+  background: #ff94b6;
+}
+
+.wpwl-form-virtualAccount-KLARNA_PAYMENTS_ONE .wpwl-button-brand:active {
+  transform: scale(0.99);
+}
+
+/* Screen-reader-only span inside the button */
+.wpwl-form-virtualAccount-KLARNA_PAYMENTS_ONE .wpwl-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}
+
+/* The Klarna logo div — let the widget render its background-image */
+.wpwl-brand-KLARNA_PAYMENTS_ONE {
+  width: 80px;
+  height: 32px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: brightness(0); /* makes any logo dark — readable on pink */
+}
+
+/* =============================================
+   KLARNA — FOOTER NOTE
+   Injected by onReady below the button
+   ============================================= */
+.klarna-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-top: 12px;
+  font-size: 11.5px;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+.klarna-footer svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
