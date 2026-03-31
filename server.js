@@ -68,8 +68,6 @@ const body = new URLSearchParams({
   "cart.items[0].tax": "0",
   "cart.items[0].totalAmount": "12.99",
   "cart.items[0].totalTaxAmount": "0",
- 
-
 }).toString();
 
   console.log("Preparing checkout with entityId:", ENTITY_ID);
