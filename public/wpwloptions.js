@@ -37,9 +37,6 @@ var wpwlOptions = {
     submit: "Process Payment"
   },
 
-  // ✅ FIX: Tell the widget to render Klarna inline rather than skipping it
-  inlineFlow: ["KLARNA_PAYMENTS_ONE"],
-
   onReady: function(){
     $(".wpwl-group-cardNumber").after($(".wpwl-group-brand").detach());
     $(".wpwl-group-cvv").after($(".wpwl-group-cardHolder").detach());
