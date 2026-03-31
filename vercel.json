@@ -6,11 +6,10 @@
   "routes": [
     { "src": "/webhook", "methods": ["POST"], "dest": "/server.js" },
     { "src": "/webhooks/view", "dest": "/server.js" },
-    { "src": "/", "dest": "/server.js" },
-    { "src": "/payment", "dest": "/server.js" },
-    { "src": "/paymentresult", "dest": "/server.js" },
     { "src": "/debug/env", "dest": "/server.js" },
-    { "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|html))$", "dest": "/public/$1" },
-    { "src": "/\\.well-known/(.*)", "dest": "/public/.well-known/$1" }
+    { "src": "/paymentresult", "dest": "/server.js" },
+    { "src": "/payment", "dest": "/server.js" },
+    { "src": "/\\.well-known/(.*)", "dest": "/server.js" },
+    { "src": "/(.*)", "dest": "/server.js" }
   ]
 }
