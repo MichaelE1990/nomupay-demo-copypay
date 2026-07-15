@@ -137,8 +137,6 @@ var wpwlOptions = {
 
   applePay: {
     version: 3,
-    checkAvailability: "applePayCapabilities",
-    merchantIdentifier: "8ac7a4c781a732090181aaf9f6fc15d4",
     buttonSource: "js",
     buttonStyle: "white-outline",
     buttonType: "buy",
