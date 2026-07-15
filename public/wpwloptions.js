@@ -151,12 +151,13 @@ var wpwlOptions = {
     supportedNetworks: ["discover", "masterCard", "visa"],
     lineItems: getLineItemsNoShipping(),
     supportedCountries: ["GB"],
-    requiredBillingContactFields: [],
+    requiredBillingContactFields: ["postalAddress"],
+    requiredShippingContactFields: ["email", "phone"],
     submitOnPaymentAuthorized: ["customer", "billing"],
     onCancel: function() { console.log("onCancel"); },
     onPaymentAuthorized: function(payment) {
       console.log("onPaymentAuthorized:", payment);
-      return { transactionState: "SUCCESS" };
+      return { status: "SUCCESS" };
     }
   }
 };
