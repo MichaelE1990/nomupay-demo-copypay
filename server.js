@@ -61,6 +61,7 @@ const body = new URLSearchParams({
   "shipping.country": "GB",
   "shipping.givenName": "John",
   "shipping.surname": "Doe",
+  "threeDSecure.challengeIndicator":"03",
   "shipping.customer.email": "john@doe.com",
   "cart.items[0].name": "Battery Power Pack",
   "cart.items[0].price": "12.99",
