@@ -44,8 +44,6 @@ const body = new URLSearchParams({
   amount: "12.99",
   currency: "GBP",
   paymentType: "DB",
-  integrity: "true",
-  testMode: "EXTERNAL",
   "billing.street1": "Easter Road 10",
   "billing.city": "Edinburgh",
   "billing.state": "Scotland",
