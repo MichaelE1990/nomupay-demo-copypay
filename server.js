@@ -44,7 +44,6 @@ const body = new URLSearchParams({
   amount: "12.99",
   currency: "GBP",
   paymentType: "DB",
-  integrity: "true",
   testMode: "INTERNAL",
   "billing.country": "GB",
   "customer.givenName": "John",
