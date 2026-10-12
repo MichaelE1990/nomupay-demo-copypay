@@ -1,5 +1,5 @@
 // amounts in minor units (pence)
-var subTotalAmount = 10; // £0.10
+var subTotalAmount = 1299; // £12.99 - must match the checkout amount in server.js
 var shippingAmount = 0;
 var taxAmount = 0;
 var currency = "GBP";
@@ -140,7 +140,7 @@ var wpwlOptions = {
     buttonSource: "js",
     buttonStyle: "white-outline",
     buttonType: "buy",
-    displayName: "MyStore",
+    displayName: "Nomupay Demo",
     domainName: "nomupay-demo-copypay.vercel.app",
     total: getTotal(),
     currencyCode: currency,
@@ -150,7 +150,7 @@ var wpwlOptions = {
     lineItems: getLineItemsNoShipping(),
     supportedCountries: ["GB"],
     requiredBillingContactFields: ["postalAddress"],
-    requiredShippingContactFields: ["email", "phone"],
+    requiredShippingContactFields: ["email", "name", "phone"],
     submitOnPaymentAuthorized: ["customer", "billing"],
     onCancel: function() { console.log("onCancel"); },
     onPaymentAuthorized: function(payment) {
