@@ -42,7 +42,8 @@ var wpwlOptions = {
     $(".wpwl-group-cvv").after($(".wpwl-group-cardHolder").detach());
     var visa = $(".wpwl-brand:first").clone().removeAttr("class").attr("class", "wpwl-brand-card wpwl-brand-custom wpwl-brand-VISA");
     var master = $(visa).clone().removeClass("wpwl-brand-VISA").addClass("wpwl-brand-MASTER");
-    $(".wpwl-brand:first").after($(master)).after($(visa));
+    var amex = $(visa).clone().removeClass("wpwl-brand-VISA").addClass("wpwl-brand-AMEX");
+    $(".wpwl-brand:first").after($(amex)).after($(master)).after($(visa));
     var imageUrl = "https://eu-test.oppwa.com/v1/static/" + wpwl.cacheVersion + "/img/brand.png";
     $(".wpwl-brand-custom").css("background-image", "url(" + imageUrl + ")");
   },
@@ -146,7 +147,7 @@ var wpwlOptions = {
     currencyCode: currency,
     countryCode: "GB",
     merchantCapabilities: ["supports3DS"],
-    supportedNetworks: ["discover", "masterCard", "visa"],
+    supportedNetworks: ["amex", "discover", "masterCard", "visa"],
     lineItems: getLineItemsNoShipping(),
     supportedCountries: ["GB"],
     requiredBillingContactFields: ["postalAddress"],
