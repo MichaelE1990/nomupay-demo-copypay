@@ -40,11 +40,6 @@ var wpwlOptions = {
   // Render PayPal's buttons inside the widget and open PayPal in a popup
   inlineFlow: ["PAYPAL"],
 
-  // Called if the PayPal SDK fails to load, the popup errors, or the shopper closes the popup
-  onError: function(error) {
-    console.log("onError:", error);
-  },
-
   onReady: function(){
     $(".wpwl-group-cardNumber").after($(".wpwl-group-brand").detach());
     $(".wpwl-group-cvv").after($(".wpwl-group-cardHolder").detach());
@@ -169,12 +164,6 @@ var wpwlOptions = {
 
   paypal: {
     // The checkout uses paymentType=DB; the widget defaults to "authorize"
-    intent: "capture",
-    // Closing the popup cancels the payment (100.396.101) instead of leaving it pending
-    onCancelRedirect: true,
-    // Query parameters for PayPal's JS SDK; cards already go through the widget's card form
-    sdkParams: {
-      "disable-funding": "card"
-    }
+    intent: "capture"
   }
 };
