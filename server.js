@@ -19,6 +19,7 @@ const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
 const API_HOST = process.env.API_HOST || "eu-test.oppwa.com";
 const BASE_URL = `https://${API_HOST}/`;
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+const SHOPPER_RESULT_URL = process.env.SHOPPER_RESULT_URL;
 
 // Validate required environment variables
 if (!ENTITY_ID || !ACCESS_TOKEN) {
@@ -81,6 +82,8 @@ const body = new URLSearchParams({
   "shipping.country": "GB",
   "shipping.givenName": "John",
   "shipping.surname": "Doe",
+  "shipping.customer.givenName": "John",
+  "shipping.customer.surname": "Doe",
   "threeDSecure.challengeIndicator":"3",
   "shipping.customer.email": "john@doe.com",
   "cart.items[0].name": "Battery Power Pack",
@@ -303,6 +306,13 @@ app.get("/payment", async (req, res) => {
 
     // Replace the checkout ID placeholder
     html = html.replace(/{{checkoutId}}/g, checkout.id);
+
+    // The widget sends the form action as shopperResultUrl, which PayPal REST
+    // uses as its return_url, so it must be an absolute URL
+    const shopperResultUrl = /^https?:\/\//.test(SHOPPER_RESULT_URL || "")
+      ? SHOPPER_RESULT_URL
+      : `${req.headers['x-forwarded-proto'] || req.protocol}://${req.get('host')}/paymentresult`;
+    html = html.replace(/{{shopperResultUrl}}/g, escapeHtml(shopperResultUrl));
 
     res.send(html);
   } catch (error) {
