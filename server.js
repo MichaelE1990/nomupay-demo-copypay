@@ -70,7 +70,6 @@ const body = new URLSearchParams({
   amount: "12.99",
   currency: "GBP",
   paymentType: "DB",
-  testMode: "EXTERNAL",
   "billing.country": "GB",
   "customer.givenName": "John",
   "customer.surname": "Doe",
