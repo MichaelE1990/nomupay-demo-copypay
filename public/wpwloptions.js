@@ -39,6 +39,7 @@ var wpwlOptions = {
 
   // Render PayPal's buttons inside the widget and open PayPal in a popup
   inlineFlow: ["PAYPAL"],
+  inlineResultTarget: "_self",
 
   onReady: function(){
     $(".wpwl-group-cardNumber").after($(".wpwl-group-brand").detach());
@@ -160,10 +161,5 @@ var wpwlOptions = {
       console.log("onPaymentAuthorized:", payment);
       return { status: "SUCCESS" };
     }
-  },
-
-  paypal: {
-    // The checkout uses paymentType=DB; the widget defaults to "authorize"
-    intent: "capture"
   }
 };
