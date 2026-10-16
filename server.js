@@ -61,11 +61,23 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+// Checkout field groups that /payment?omit=... can drop, for debugging PayPal REST
+const CHECKOUT_FIELD_GROUPS = {
+  cart: (key) => key.startsWith("cart."),
+  shipping: (key) => key.startsWith("shipping."),
+  billing: (key) => key.startsWith("billing."),
+  customer: (key) => key.startsWith("customer."),
+  threeds: (key) => key === "threeDSecure.challengeIndicator",
+  klarna: (key) => key.startsWith("customParameters[KLARNA_OPTIONS_"),
+};
+
 /**
  * Prepare a checkout session with the payment gateway
+ * @param {string[]} omit - names of CHECKOUT_FIELD_GROUPS to leave out
+ * @param {boolean} addMerchantTransactionId - send a random merchantTransactionId
  */
-async function prepareCheckout() {
-const body = new URLSearchParams({
+async function prepareCheckout(omit = [], addMerchantTransactionId = true) {
+const params = {
   entityId: ENTITY_ID,
   amount: "12.99",
   currency: "GBP",
@@ -106,9 +118,23 @@ const body = new URLSearchParams({
 "customParameters[KLARNA_OPTIONS_radiusBorder]":           "8px",
 "customParameters[KLARNA_OPTIONS_logoAlignment]":          "Left",
 "customParameters[KLARNA_OPTIONS_purchaseType]":           "Buy",
-}).toString();
+};
+
+  if (addMerchantTransactionId) {
+    params.merchantTransactionId = crypto.randomUUID();
+  }
+
+  for (const key of Object.keys(params)) {
+    if (omit.some((group) => CHECKOUT_FIELD_GROUPS[group]?.(key))) {
+      delete params[key];
+    }
+  }
+
+  const body = new URLSearchParams(params).toString();
 
   console.log("Preparing checkout with entityId:", ENTITY_ID);
+  console.log("  Omitted field groups:", omit.length ? omit.join(", ") : "none");
+  console.log("  merchantTransactionId:", params.merchantTransactionId || "not sent");
 
   const response = await fetch(`${BASE_URL}v1/checkouts`, {
     method: "POST",
@@ -289,7 +315,9 @@ app.get("/debug/env", (req, res) => {
 app.get("/payment", async (req, res) => {
   try {
     // Prepare checkout with the payment gateway
-    const checkout = await prepareCheckout();
+    // e.g. /payment?omit=cart,shipping drops those field groups; ?nomtid=1 skips merchantTransactionId
+    const omit = String(req.query.omit || "").split(",").map((group) => group.trim()).filter(Boolean);
+    const checkout = await prepareCheckout(omit, req.query.nomtid !== "1");
 
     if (!checkout.id) {
       console.error("No checkout ID received:", checkout);
