@@ -77,7 +77,7 @@ const body = new URLSearchParams({
   "shipping.street1": "Easter Road 10",
   "shipping.city": "Edinburgh",
   "shipping.state": "Scotland",
-  "shipping.postcode": "EH99",
+  "shipping.postcode": "EH7 5QG",
   "shipping.country": "GB",
   "shipping.givenName": "John",
   "shipping.surname": "Doe",
