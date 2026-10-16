@@ -35,6 +35,31 @@ if (!WEBHOOK_SECRET) {
 // Store recent webhooks in memory (for viewing/debugging)
 const recentWebhooks = [];
 
+// ACI result code patterns
+const SUCCESS_CODE_PATTERN = /^(000\.000\.|000\.100\.1|000\.[36]|000\.400\.[1][12]0)/;
+const PENDING_CODE_PATTERNS = [/^(000\.200)/, /^(800\.400\.5|100\.400\.500)/];
+
+/**
+ * Classify a result code as "success", "pending" or "failed"
+ */
+function getResultStatus(code) {
+  if (SUCCESS_CODE_PATTERN.test(code || "")) return "success";
+  if (PENDING_CODE_PATTERNS.some((pattern) => pattern.test(code || ""))) return "pending";
+  return "failed";
+}
+
+/**
+ * Escape a value for insertion into HTML
+ */
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 /**
  * Prepare a checkout session with the payment gateway
  */
@@ -179,11 +204,16 @@ function processWebhookNotification(notification) {
       console.log("  3. Update order status in your system");
       console.log("  4. Trigger fulfillment if payment successful");
 
-      if (payload.result?.code?.startsWith('000.')) {
+      const paymentStatus = getResultStatus(payload.result?.code);
+      if (paymentStatus === "success") {
         console.log("  ✅ Payment SUCCESSFUL - Proceed with order fulfillment");
         console.log("     Transaction ID:", payload.id);
         console.log("     Amount:", payload.amount, payload.currency);
         console.log("     Payment Brand:", payload.paymentBrand);
+      } else if (paymentStatus === "pending") {
+        console.log("  ⏳ Payment PENDING - Do NOT fulfill yet, wait for the final notification");
+        console.log("     Transaction ID:", payload.id);
+        console.log("     Reason:", payload.result?.description);
       } else {
         console.log("  ❌ Payment FAILED - Do NOT fulfill order");
         console.log("     Reason:", payload.result?.description);
@@ -319,8 +349,16 @@ app.get("/paymentresult", async (req, res) => {
       description: status.result?.description
     });
 
-    const isSuccess = status.result?.code?.startsWith('000.');
-    const statusColor = isSuccess ? 'green' : 'red';
+    const resultStatus = getResultStatus(status.result?.code);
+    const statusLabels = { success: "Successful", pending: "Pending", failed: "Failed" };
+
+    // Connector details are only returned when "Show connector details in response" is enabled
+    const details = status.resultDetails;
+    const connectorDetails = details ? [
+      [`ConnectorTxID1${status.paymentBrand === "PAYPAL" ? " (PayPal order ID)" : ""}`, details.ConnectorTxID1],
+      ["AcquirerResponse", details.AcquirerResponse],
+      ["ExtendedDescription", details.ExtendedDescription],
+    ].filter(([, value]) => value) : [];
 
     res.send(`
       <!DOCTYPE html>
@@ -330,13 +368,19 @@ app.get("/paymentresult", async (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="styles.css">
         <style>
-          .success { color: green; }
-          .error { color: red; }
+          .success { color: green; font-weight: bold; }
+          .pending { color: #b45309; font-weight: bold; }
+          .failed { color: red; font-weight: bold; }
           .result-box {
             padding: 20px;
             border: 2px solid #ddd;
             border-radius: 8px;
             margin: 20px 0;
+          }
+          .pending-note {
+            padding: 10px 12px;
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
           }
           .debug {
             margin-top: 30px;
@@ -353,23 +397,34 @@ app.get("/paymentresult", async (req, res) => {
           <h1>Payment Result</h1>
 
           <div class="result-box">
-            <p><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${status.result?.description || 'Unknown'}</span></p>
-            <p><strong>Code:</strong> ${status.result?.code || 'N/A'}</p>
-            ${status.paymentBrand ? `<p><strong>Payment Method:</strong> ${status.paymentBrand}</p>` : ''}
-            ${status.amount ? `<p><strong>Amount:</strong> ${status.amount} ${status.currency || ''}</p>` : ''}
-            ${status.id ? `<p><strong>Transaction ID:</strong> ${status.id}</p>` : ''}
+            <p><strong>Status:</strong> <span class="${resultStatus}">${statusLabels[resultStatus]}</span></p>
+            <p><strong>Description:</strong> ${escapeHtml(status.result?.description || 'Unknown')}</p>
+            <p><strong>Code:</strong> ${escapeHtml(status.result?.code || 'N/A')}</p>
+            ${status.paymentBrand ? `<p><strong>Payment Method:</strong> ${escapeHtml(status.paymentBrand)}</p>` : ''}
+            ${status.amount ? `<p><strong>Amount:</strong> ${escapeHtml(status.amount)} ${escapeHtml(status.currency || '')}</p>` : ''}
+            ${status.id ? `<p><strong>Transaction ID:</strong> ${escapeHtml(status.id)}</p>` : ''}
+            ${resultStatus === 'pending' ? `
+              <p class="pending-note">This payment is not final yet. The final status comes by webhook: watch for it on the <a href="/webhooks/view">webhook monitor</a>.</p>
+            ` : ''}
           </div>
+
+          ${connectorDetails.length ? `
+            <div class="result-box">
+              <h2>Connector details</h2>
+              ${connectorDetails.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join('')}
+            </div>
+          ` : ''}
 
           <p><a href="/payment">Make another payment</a></p>
 
           <details class="debug">
             <summary>Debug Information (click to expand)</summary>
-            <pre>${JSON.stringify({
+            <pre>${escapeHtml(JSON.stringify({
               checkoutId,
               resourcePath,
               entityId: ENTITY_ID,
               fullResponse: status
-            }, null, 2)}</pre>
+            }, null, 2))}</pre>
           </details>
         </div>
       </body>
@@ -417,6 +472,7 @@ app.get("/webhooks/view", (req, res) => {
           background: #f9f9f9;
         }
         .webhook-success { border-color: #4CAF50; }
+        .webhook-pending { border-color: #f59e0b; }
         .webhook-failed { border-color: #f44336; }
         .timestamp {
           color: #666;
@@ -467,15 +523,16 @@ app.get("/webhooks/view", (req, res) => {
             <p><a href="/payment">Go to Payment Page</a></p>
           </div>
         ` : recentWebhooks.map((webhook, index) => {
-          const isSuccess = webhook.notification.payload?.result?.code?.startsWith('000.');
+          const webhookStatus = getResultStatus(webhook.notification.payload?.result?.code);
+          const statusColors = { success: 'green', pending: '#b45309', failed: 'red' };
           return `
-            <div class="webhook-item ${isSuccess ? 'webhook-success' : 'webhook-failed'}">
+            <div class="webhook-item webhook-${webhookStatus}">
               <div class="timestamp">
                 <strong>#${index + 1}</strong> - ${webhook.timestamp}
               </div>
               <p><strong>Type:</strong> ${webhook.notification.type}</p>
               ${webhook.notification.action ? `<p><strong>Action:</strong> ${webhook.notification.action}</p>` : ''}
-              <p><strong>Status:</strong> <span style="color: ${isSuccess ? 'green' : 'red'}; font-weight: bold;">
+              <p><strong>Status:</strong> <span style="color: ${statusColors[webhookStatus]}; font-weight: bold;">
                 ${webhook.notification.payload?.result?.description || 'N/A'}
               </span></p>
               <p><strong>Transaction ID:</strong> ${webhook.notification.payload?.id || 'N/A'}</p>
