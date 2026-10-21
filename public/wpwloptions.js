@@ -2,7 +2,7 @@
 var subTotalAmount = 1299; // £12.99 - must match the checkout amount in server.js
 var shippingAmount = 0;
 var taxAmount = 0;
-var currency = "GBP";
+var currency = "USD";
 var applePayTotalLabel = "Nomupay";
 
 function getAmount() {

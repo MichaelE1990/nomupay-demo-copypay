@@ -80,7 +80,7 @@ async function prepareCheckout(omit = [], addMerchantTransactionId = true) {
 const params = {
   entityId: ENTITY_ID,
   amount: "12.99",
-  currency: "GBP",
+  currency: "USD",
   paymentType: "DB",
   testMode: "INTERNAL",
   "billing.country": "GB",
