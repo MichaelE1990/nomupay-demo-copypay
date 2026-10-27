@@ -82,7 +82,11 @@ const params = {
   amount: "293.75",
   currency: "USD",
   paymentType: "DB",
-  testMode: "INTERNAL",
+  createRegistration: "true",
+  integrity: "true",
+  "standingInstruction.mode": "INITIAL",
+  "standingInstruction.source": "CIT",
+  "standingInstruction.type": "RECURRING",
   "billing.country": "GB",
   "customer.givenName": "John",
   "customer.surname": "Doe",
@@ -334,6 +338,10 @@ app.get("/payment", async (req, res) => {
 
     // Replace the checkout ID placeholder
     html = html.replace(/{{checkoutId}}/g, checkout.id);
+    html = html.replace(
+      /{{widgetIntegrity}}/g,
+      checkout.integrity ? ` integrity="${escapeHtml(checkout.integrity)}" crossorigin="anonymous"` : ""
+    );
 
     // The widget sends the form action as shopperResultUrl, which PayPal REST
     // uses as its return_url, so it must be an absolute URL
