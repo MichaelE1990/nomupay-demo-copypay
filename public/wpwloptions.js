@@ -1,5 +1,5 @@
-// amounts in minor units (pence)
-var subTotalAmount = 1299; // £12.99 - must match the checkout amount in server.js
+// amounts in minor units (cents)
+var subTotalAmount = 550; // $5.50 - must match the checkout amount in server.js
 var shippingAmount = 0;
 var taxAmount = 0;
 var currency = "USD";

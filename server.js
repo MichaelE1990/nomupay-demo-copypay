@@ -79,7 +79,7 @@ const CHECKOUT_FIELD_GROUPS = {
 async function prepareCheckout(omit = [], addMerchantTransactionId = true) {
 const params = {
   entityId: ENTITY_ID,
-  amount: "12.99",
+  amount: "5.50",
   currency: "USD",
   paymentType: "DB",
   testMode: "INTERNAL",
