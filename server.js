@@ -69,14 +69,17 @@ const CHECKOUT_FIELD_GROUPS = {
   customer: (key) => key.startsWith("customer."),
   threeds: (key) => key === "threeDSecure.challengeIndicator",
   klarna: (key) => key.startsWith("customParameters[KLARNA_OPTIONS_"),
+  // createRegistration + standingInstruction turn a PayPal payment into a billing agreement (RG)
+  recurring: (key) => key === "createRegistration" || key.startsWith("standingInstruction."),
 };
 
 /**
  * Prepare a checkout session with the payment gateway
  * @param {string[]} omit - names of CHECKOUT_FIELD_GROUPS to leave out
  * @param {boolean} addMerchantTransactionId - send a random merchantTransactionId
+ * @param {string} [testMode] - e.g. "EXTERNAL" to reach the connector's sandbox instead of the simulator
  */
-async function prepareCheckout(omit = [], addMerchantTransactionId = true) {
+async function prepareCheckout(omit = [], addMerchantTransactionId = true, testMode) {
 const params = {
   entityId: ENTITY_ID,
   amount: "293.75",
@@ -128,6 +131,10 @@ const params = {
     params.merchantTransactionId = crypto.randomUUID();
   }
 
+  if (testMode) {
+    params.testMode = testMode;
+  }
+
   for (const key of Object.keys(params)) {
     if (omit.some((group) => CHECKOUT_FIELD_GROUPS[group]?.(key))) {
       delete params[key];
@@ -139,6 +146,7 @@ const params = {
   console.log("Preparing checkout with entityId:", ENTITY_ID);
   console.log("  Omitted field groups:", omit.length ? omit.join(", ") : "none");
   console.log("  merchantTransactionId:", params.merchantTransactionId || "not sent");
+  console.log("  testMode:", params.testMode || "not sent");
 
   const response = await fetch(`${BASE_URL}v1/checkouts`, {
     method: "POST",
@@ -320,8 +328,11 @@ app.get("/payment", async (req, res) => {
   try {
     // Prepare checkout with the payment gateway
     // e.g. /payment?omit=cart,shipping drops those field groups; ?nomtid=1 skips merchantTransactionId
+    // ?testmode=external (or internal) adds testMode to the checkout
     const omit = String(req.query.omit || "").split(",").map((group) => group.trim()).filter(Boolean);
-    const checkout = await prepareCheckout(omit, req.query.nomtid !== "1");
+    const testModeParam = String(req.query.testmode || "").toUpperCase();
+    const testMode = ["EXTERNAL", "INTERNAL"].includes(testModeParam) ? testModeParam : undefined;
+    const checkout = await prepareCheckout(omit, req.query.nomtid !== "1", testMode);
 
     if (!checkout.id) {
       console.error("No checkout ID received:", checkout);
