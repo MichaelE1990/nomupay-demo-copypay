@@ -3,6 +3,7 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { PAYPAL_EXAMPLES, getPayPalExample } = require("./paypal-examples");
 
 const app = express();
 
@@ -382,6 +383,178 @@ app.get("/payment", async (req, res) => {
   }
 });
 
+
+/**
+ * PayPal examples: minimal checkout per the integration sheet's Smart Buttons samples
+ * (entityId, amount, currency, paymentType=DB, testMode=EXTERNAL)
+ */
+async function preparePayPalExampleCheckout(currency) {
+  const params = {
+    entityId: ENTITY_ID,
+    amount: "293.75",
+    currency,
+    paymentType: "DB",
+    testMode: "EXTERNAL",
+  };
+
+  const response = await fetch(`${BASE_URL}v1/checkouts`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Authorization": `Bearer ${ACCESS_TOKEN}`,
+    },
+    body: new URLSearchParams(params).toString(),
+  });
+
+  const data = await response.json();
+  console.log("PayPal example checkout:", { currency, id: data.id, resultCode: data.result?.code });
+  return { data, params };
+}
+
+/**
+ * Route: wpwlOptions for one PayPal example (external file, since the page CSP blocks inline scripts)
+ */
+app.get("/paypal-examples/options.js", (req, res) => {
+  const example = getPayPalExample(String(req.query.example || ""));
+  const js = `// PayPal example: ${example.title}
+var wpwlOptions = ${JSON.stringify(example.options, null, 2)};
+
+// Added on every example so the page can show widget events
+function logWidgetEvent(name, data) {
+  var text;
+  try { text = typeof data === "string" ? data : JSON.stringify(data); } catch (e) { text = String(data); }
+  var line = new Date().toLocaleTimeString() + "  " + name + "  " + text;
+  console.log(line);
+  var log = document.getElementById("event-log");
+  if (log) {
+    if (log.getAttribute("data-empty")) { log.textContent = ""; log.removeAttribute("data-empty"); }
+    log.textContent += line + "\\n";
+  }
+}
+wpwlOptions.onReady = function () { logWidgetEvent("onReady", "Widget rendered"); };
+wpwlOptions.onError = function (error) { logWidgetEvent("onError", error); };
+`;
+  res.type("application/javascript").set("Cache-Control", "no-store").send(js);
+});
+
+/**
+ * Route: PayPal examples - try the styling and funding-source options from the integration sheet
+ */
+app.get("/paypal-examples", async (req, res) => {
+  try {
+    const example = getPayPalExample(String(req.query.example || ""));
+    const { data: checkout, params } = await preparePayPalExampleCheckout(example.currency);
+
+    if (!checkout.id) {
+      console.error("No checkout ID received:", checkout);
+      return res.status(500).send(`Could not initialize PayPal example. ${escapeHtml(checkout.result?.description || "Unknown error")}`);
+    }
+
+    const groups = [...new Set(PAYPAL_EXAMPLES.map((e) => e.group))];
+    const nav = groups.map((group) => `
+      <h3>${escapeHtml(group)}</h3>
+      <ul>${PAYPAL_EXAMPLES.filter((e) => e.group === group).map((e) => `
+        <li><a href="/paypal-examples?example=${encodeURIComponent(e.key)}"${e.key === example.key ? ' class="active"' : ""}>${escapeHtml(e.title)}</a></li>`).join("")}
+      </ul>`).join("");
+
+    const checkoutShown = Object.entries({ ...params, entityId: `${String(ENTITY_ID).slice(0, 8)}… (Demo Channel)` })
+      .map(([key, value]) => `${key}=${value}`).join("\n");
+    const integrity = checkout.integrity ? ` integrity="${escapeHtml(checkout.integrity)}" crossorigin="anonymous"` : "";
+
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src  'self' https://eu-test.oppwa.com https://paypal.com https://www.paypal.com https://www.sandbox.paypal.com https://*.paypal.com https://*.paypalobjects.com;
+      frame-src   'self' https://eu-test.oppwa.com https://www.paypal.com https://www.sandbox.paypal.com https://*.paypal.com https://*.paypalobjects.com;
+      connect-src 'self' https://eu-test.oppwa.com https://www.paypal.com https://www.sandbox.paypal.com https://*.paypal.com https://*.paypalobjects.com;
+      img-src     'self' https://eu-test.oppwa.com https://www.paypal.com https://www.sandbox.paypal.com https://*.paypal.com https://*.paypalobjects.com data:;
+      style-src   'self' https://eu-test.oppwa.com https://www.paypal.com https://www.sandbox.paypal.com https://*.paypal.com https://*.paypalobjects.com 'unsafe-inline';
+      worker-src  blob:;
+    ">
+    <title>PayPal examples</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #111827; background: #f9fafb; }
+      .layout { display: grid; grid-template-columns: 300px 1fr; min-height: 100vh; }
+      nav { background: #fff; border-right: 1px solid #e5e7eb; padding: 20px 16px; }
+      nav .back { font-size: 13px; color: #4f46e5; text-decoration: none; }
+      nav h2 { font-size: 18px; margin: 12px 0 4px; }
+      nav h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; margin: 20px 0 6px; }
+      nav ul { list-style: none; margin: 0; padding: 0; }
+      nav a { display: block; padding: 6px 8px; border-radius: 6px; color: #374151; text-decoration: none; font-size: 14px; line-height: 1.3; }
+      nav a:hover { background: #f3f4f6; }
+      nav a.active { background: #eef2ff; color: #3730a3; font-weight: 600; }
+      main { padding: 24px 32px; max-width: 900px; }
+      h1 { font-size: 22px; margin: 0 0 6px; }
+      .about { color: #4b5563; margin: 0 0 6px; }
+      .sheet { font-size: 13px; color: #4f46e5; }
+      .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px 20px; margin-top: 18px; }
+      .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; margin: 0 0 10px; }
+      .widget-box { max-width: 420px; }
+      ol { margin: 0; padding-left: 20px; } ol li { margin: 4px 0; }
+      pre { background: #111827; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.5; margin: 0; white-space: pre-wrap; word-break: break-word; }
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+      .note { font-size: 12.5px; color: #6b7280; margin: 8px 0 0; }
+      @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } nav { border-right: 0; border-bottom: 1px solid #e5e7eb; } main { padding: 16px; } .grid2 { grid-template-columns: 1fr; } }
+    </style>
+    <script src="/paypal-examples/options.js?example=${encodeURIComponent(example.key)}"></script>
+    <script src="https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId=${escapeHtml(checkout.id)}"${integrity}></script>
+  </head>
+  <body>
+    <div class="layout">
+      <nav>
+        <a class="back" href="/payment">&larr; Back to checkout</a>
+        <h2>PayPal examples</h2>
+        ${nav}
+      </nav>
+      <main>
+        <h1>${escapeHtml(example.title)}</h1>
+        <p class="about">${escapeHtml(example.about)}</p>
+        <a class="sheet" href="${escapeHtml(example.sheet)}" target="_blank" rel="noopener">Integration sheet: ${escapeHtml(example.sheetLabel)} &rarr;</a>
+
+        <div class="card">
+          <h2>Try it</h2>
+          <div class="widget-box">
+            <form action="${escapeHtml(getShopperResultUrl(req))}" class="paymentWidgets" data-brands="PAYPAL"></form>
+          </div>
+          <p class="note">${escapeHtml(params.amount)} ${escapeHtml(params.currency)} DB on PayPal's sandbox. Each click creates a sandbox order; anything you don't finish stays pending and times out.</p>
+        </div>
+
+        <div class="card">
+          <h2>What should happen</h2>
+          <ol>${example.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ol>
+        </div>
+
+        <div class="card">
+          <h2>Widget events</h2>
+          <pre id="event-log" data-empty="1">Waiting for the widget…</pre>
+        </div>
+
+        <div class="grid2">
+          <div class="card">
+            <h2>wpwlOptions</h2>
+            <pre>${escapeHtml(`var wpwlOptions = ${JSON.stringify(example.options, null, 2)};`)}</pre>
+            <p class="note">The page also adds onReady and onError, only to fill the event log.</p>
+          </div>
+          <div class="card">
+            <h2>Checkout request (POST /v1/checkouts)</h2>
+            <pre>${escapeHtml(checkoutShown)}</pre>
+            <p class="note">Form: &lt;form action="…/paymentresult" class="paymentWidgets" data-brands="PAYPAL"&gt;</p>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>`);
+  } catch (error) {
+    console.error("PayPal example error:", error);
+    res.status(500).send("Could not initialize PayPal example. Please try again.");
+  }
+});
 
 /**
  * Route: Payment Result - Server-side rendering of payment status
