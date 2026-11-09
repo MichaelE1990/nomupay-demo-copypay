@@ -224,7 +224,7 @@ const PAYPAL_EXAMPLES = [
     about: "From the sheet's Venmo sample. Venmo is a mobile experience: open this on iOS Safari or Android Chrome.",
     steps: [
       "On a phone, a Venmo button shows; it switches to the Venmo app.",
-      "On a desktop browser PayPal usually shows nothing, because the buyer isn't eligible.",
+      "On a desktop browser no button shows, and the event log reports: \"Although wpwlOptions.fundingSources is provided, no button could be rendered\". That's expected: the buyer isn't eligible on desktop.",
     ],
     options: {
       inlineFlow: ["PAYPAL"],
@@ -244,14 +244,14 @@ const PAYPAL_EXAMPLES = [
   {
     key: "ideal-nl",
     group: "Funding sources",
-    title: "iDEAL (Netherlands, EUR)",
+    title: "iDEAL (Netherlands, EUR) - sheet sample fails",
     sheet: `${SHEET}#PayPalRestAPIintegrationsheet-iDEAL(NLonly)`,
     sheetLabel: "iDEAL (NL only)",
     currency: "EUR",
-    about: "From the sheet's iDEAL sample, in EUR. buyer-country NL added for sandbox, as the Funding sources section suggests for region-only sources.",
+    about: "The sheet's iDEAL sample, in EUR (buyer-country NL added for sandbox). Tested 9 Nov 2026: the widget rejects it.",
     steps: [
-      "An iDEAL button shows instead of the PayPal button.",
-      "Clicking it opens iDEAL's bank selection rather than a PayPal login.",
+      "Per the sheet, an iDEAL button should show instead of the PayPal button.",
+      "What actually happens: no button, and the event log shows \"Element 'IDEAL' in wpwlOptions.fundingSources is not valid\". The widget no longer accepts IDEAL as a funding source, so this part of the sheet looks out of date. Worth checking with ACI before offering iDEAL through PayPal.",
     ],
     options: {
       inlineFlow: ["PAYPAL"],
