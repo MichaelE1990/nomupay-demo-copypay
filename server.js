@@ -69,27 +69,22 @@ const CHECKOUT_FIELD_GROUPS = {
   customer: (key) => key.startsWith("customer."),
   threeds: (key) => key === "threeDSecure.challengeIndicator",
   klarna: (key) => key.startsWith("customParameters[KLARNA_OPTIONS_"),
-  // createRegistration + standingInstruction turn a PayPal payment into a billing agreement (RG)
-  recurring: (key) => key === "createRegistration" || key.startsWith("standingInstruction."),
 };
 
 /**
  * Prepare a checkout session with the payment gateway
  * @param {string[]} omit - names of CHECKOUT_FIELD_GROUPS to leave out
  * @param {boolean} addMerchantTransactionId - send a random merchantTransactionId
- * @param {string} [testMode] - e.g. "EXTERNAL" to reach the connector's sandbox instead of the simulator
+ * @param {string} [testMode] - "EXTERNAL" reaches the connector's test system (needed for PayPal's sandbox), "INTERNAL" the simulator
+ * @param {boolean} [recurring] - add createRegistration + standingInstruction (card-on-file test)
  */
-async function prepareCheckout(omit = [], addMerchantTransactionId = true, testMode) {
+async function prepareCheckout(omit = [], addMerchantTransactionId = true, testMode, recurring = false) {
 const params = {
   entityId: ENTITY_ID,
   amount: "293.75",
   currency: "USD",
   paymentType: "DB",
-  createRegistration: "true",
   integrity: "true",
-  "standingInstruction.mode": "INITIAL",
-  "standingInstruction.source": "CIT",
-  "standingInstruction.type": "RECURRING",
   "billing.country": "GB",
   "customer.givenName": "John",
   "customer.surname": "Doe",
@@ -106,10 +101,11 @@ const params = {
   "threeDSecure.challengeIndicator":"3",
   "shipping.customer.email": "john@doe.com",
   "cart.items[0].name": "Battery Power Pack",
-  "cart.items[0].price": "12.99",
+  // Cart must add up to the amount: PayPal rejects the order (AMOUNT_MISMATCH) otherwise
+  "cart.items[0].price": "293.75",
   "cart.items[0].quantity": "1",
   "cart.items[0].tax": "0",
-  "cart.items[0].totalAmount": "12.99",
+  "cart.items[0].totalAmount": "293.75",
   "cart.items[0].totalTaxAmount": "0",
 "customParameters[KLARNA_OPTIONS_colorButton]":            "#111827",
 "customParameters[KLARNA_OPTIONS_colorButtonText]":        "#ffffff",
@@ -135,6 +131,15 @@ const params = {
     params.testMode = testMode;
   }
 
+  // Card-on-file test (e.g. ?recurring=1). Off by default: on PayPal these fields
+  // turn the payment into a billing agreement (RG) instead of a DB.
+  if (recurring) {
+    params.createRegistration = "true";
+    params["standingInstruction.mode"] = "INITIAL";
+    params["standingInstruction.source"] = "CIT";
+    params["standingInstruction.type"] = "RECURRING";
+  }
+
   for (const key of Object.keys(params)) {
     if (omit.some((group) => CHECKOUT_FIELD_GROUPS[group]?.(key))) {
       delete params[key];
@@ -147,6 +152,7 @@ const params = {
   console.log("  Omitted field groups:", omit.length ? omit.join(", ") : "none");
   console.log("  merchantTransactionId:", params.merchantTransactionId || "not sent");
   console.log("  testMode:", params.testMode || "not sent");
+  console.log("  recurring (createRegistration + standingInstruction):", recurring ? "sent" : "not sent");
 
   const response = await fetch(`${BASE_URL}v1/checkouts`, {
     method: "POST",
@@ -167,43 +173,6 @@ const params = {
   return data;
 }
 
-/**
- * Prepare a PayPal REST checkout, following the "Smart Buttons Request samples"
- * in ACI's PayPal Rest API integration sheet (PS space, page 68883870):
- * entityId, amount, currency, paymentType and testMode=EXTERNAL only.
- * No cart, shipping, createRegistration or standingInstruction: the sheet doesn't
- * use them here, and tokenization via Smart Buttons isn't supported.
- * @param {"DB"|"PA"} paymentType
- */
-async function preparePayPalCheckout(paymentType = "DB") {
-  const params = {
-    entityId: ENTITY_ID,
-    amount: "293.75",
-    currency: "USD",
-    paymentType,
-    testMode: "EXTERNAL",
-  };
-
-  console.log("Preparing PayPal checkout:", { paymentType, amount: params.amount, currency: params.currency, testMode: params.testMode });
-
-  const response = await fetch(`${BASE_URL}v1/checkouts`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "Authorization": `Bearer ${ACCESS_TOKEN}`,
-    },
-    body: new URLSearchParams(params).toString(),
-  });
-
-  const data = await response.json();
-  console.log("PayPal checkout response:", {
-    id: data.id,
-    resultCode: data.result?.code,
-    resultDescription: data.result?.description,
-  });
-
-  return data;
-}
 
 /**
  * Absolute URL for the result page. The widget sends the form action as
@@ -376,11 +345,13 @@ app.get("/payment", async (req, res) => {
   try {
     // Prepare checkout with the payment gateway
     // e.g. /payment?omit=cart,shipping drops those field groups; ?nomtid=1 skips merchantTransactionId
-    // ?testmode=external (or internal) adds testMode to the checkout
+    // testMode is EXTERNAL by default (PayPal needs it to reach PayPal's sandbox);
+    // ?testmode=internal uses the simulator, ?testmode=none sends no testMode
+    // ?recurring=1 adds createRegistration + standingInstruction for card-on-file tests
     const omit = String(req.query.omit || "").split(",").map((group) => group.trim()).filter(Boolean);
-    const testModeParam = String(req.query.testmode || "").toUpperCase();
+    const testModeParam = String(req.query.testmode || "external").toUpperCase();
     const testMode = ["EXTERNAL", "INTERNAL"].includes(testModeParam) ? testModeParam : undefined;
-    const checkout = await prepareCheckout(omit, req.query.nomtid !== "1", testMode);
+    const checkout = await prepareCheckout(omit, req.query.nomtid !== "1", testMode, req.query.recurring === "1");
 
     if (!checkout.id) {
       console.error("No checkout ID received:", checkout);
@@ -411,38 +382,6 @@ app.get("/payment", async (req, res) => {
   }
 });
 
-/**
- * Route: PayPal page - PayPal REST via COPYandPAY Smart Buttons, per ACI's integration sheet
- * /paypal runs a DB (intent=capture); /paypal?type=PA runs a PA (intent=authorize)
- */
-app.get("/paypal", async (req, res) => {
-  try {
-    const paymentType = String(req.query.type || "").toUpperCase() === "PA" ? "PA" : "DB";
-    const checkout = await preparePayPalCheckout(paymentType);
-
-    if (!checkout.id) {
-      console.error("No checkout ID received:", checkout);
-      return res.status(500).send(
-        `Could not initialize PayPal payment. ${checkout.result?.description || 'Unknown error'}`
-      );
-    }
-
-    let html = fs.readFileSync(path.join(__dirname, "public", "paypal.html"), "utf8");
-    html = html.replace(/{{checkoutId}}/g, checkout.id);
-    html = html.replace(
-      /{{widgetIntegrity}}/g,
-      checkout.integrity ? ` integrity="${escapeHtml(checkout.integrity)}" crossorigin="anonymous"` : ""
-    );
-    html = html.replace(/{{wpwlOptionsScript}}/g, paymentType === "PA" ? "paypal-wpwloptions-pa.js" : "paypal-wpwloptions.js");
-    html = html.replace(/{{paymentType}}/g, paymentType);
-    html = html.replace(/{{shopperResultUrl}}/g, escapeHtml(getShopperResultUrl(req)));
-
-    res.send(html);
-  } catch (error) {
-    console.error("PayPal initialization error:", error);
-    res.status(500).send("Could not initialize PayPal payment. Please try again.");
-  }
-});
 
 /**
  * Route: Payment Result - Server-side rendering of payment status

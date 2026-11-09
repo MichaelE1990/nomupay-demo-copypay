@@ -37,6 +37,20 @@ var wpwlOptions = {
     submit: "Process Payment"
   },
 
+  // Global error handler (PayPal Rest API integration sheet: "Error handling in CnP widget")
+  onError: function (error) {
+    console.log("Widget onError:", JSON.stringify(error));
+  },
+
+  // PayPal Smart Buttons inside the widget, PayPal opens in a popup
+  // (integration sheet "Minimal OPP request (DB)" + COPYandPAY PAYPAL INLINE flow)
+  inlineFlow: ["PAYPAL"],
+  inlineResultTarget: "_self",
+  paypal: {
+    intent: "capture", // checkout is paymentType=DB; leave out for PA (defaults to authorize)
+    onCancelRedirect: true // closing the popup marks the payment cancelled (100.396.101)
+  },
+
   onReady: function(){
     $(".wpwl-group-cardNumber").after($(".wpwl-group-brand").detach());
     $(".wpwl-group-cvv").after($(".wpwl-group-cardHolder").detach());
