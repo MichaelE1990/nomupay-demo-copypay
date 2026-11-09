@@ -37,10 +37,6 @@ var wpwlOptions = {
     submit: "Process Payment"
   },
 
-  // Render PayPal's buttons inside the widget and open PayPal in a popup
-  inlineFlow: ["PAYPAL"],
-  inlineResultTarget: "_self",
-
   onReady: function(){
     $(".wpwl-group-cardNumber").after($(".wpwl-group-brand").detach());
     $(".wpwl-group-cvv").after($(".wpwl-group-cardHolder").detach());

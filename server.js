@@ -168,6 +168,54 @@ const params = {
 }
 
 /**
+ * Prepare a PayPal REST checkout, following the "Smart Buttons Request samples"
+ * in ACI's PayPal Rest API integration sheet (PS space, page 68883870):
+ * entityId, amount, currency, paymentType and testMode=EXTERNAL only.
+ * No cart, shipping, createRegistration or standingInstruction: the sheet doesn't
+ * use them here, and tokenization via Smart Buttons isn't supported.
+ * @param {"DB"|"PA"} paymentType
+ */
+async function preparePayPalCheckout(paymentType = "DB") {
+  const params = {
+    entityId: ENTITY_ID,
+    amount: "293.75",
+    currency: "USD",
+    paymentType,
+    testMode: "EXTERNAL",
+  };
+
+  console.log("Preparing PayPal checkout:", { paymentType, amount: params.amount, currency: params.currency, testMode: params.testMode });
+
+  const response = await fetch(`${BASE_URL}v1/checkouts`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Authorization": `Bearer ${ACCESS_TOKEN}`,
+    },
+    body: new URLSearchParams(params).toString(),
+  });
+
+  const data = await response.json();
+  console.log("PayPal checkout response:", {
+    id: data.id,
+    resultCode: data.result?.code,
+    resultDescription: data.result?.description,
+  });
+
+  return data;
+}
+
+/**
+ * Absolute URL for the result page. The widget sends the form action as
+ * shopperResultUrl, which PayPal REST uses as its return_url.
+ */
+function getShopperResultUrl(req) {
+  return /^https?:\/\//.test(SHOPPER_RESULT_URL || "")
+    ? SHOPPER_RESULT_URL
+    : `${req.headers['x-forwarded-proto'] || req.protocol}://${req.get('host')}/paymentresult`;
+}
+
+/**
  * Get payment status using the resourcePath
  */
 async function getPaymentStatus(resourcePath) {
@@ -354,17 +402,45 @@ app.get("/payment", async (req, res) => {
       checkout.integrity ? ` integrity="${escapeHtml(checkout.integrity)}" crossorigin="anonymous"` : ""
     );
 
-    // The widget sends the form action as shopperResultUrl, which PayPal REST
-    // uses as its return_url, so it must be an absolute URL
-    const shopperResultUrl = /^https?:\/\//.test(SHOPPER_RESULT_URL || "")
-      ? SHOPPER_RESULT_URL
-      : `${req.headers['x-forwarded-proto'] || req.protocol}://${req.get('host')}/paymentresult`;
-    html = html.replace(/{{shopperResultUrl}}/g, escapeHtml(shopperResultUrl));
+    html = html.replace(/{{shopperResultUrl}}/g, escapeHtml(getShopperResultUrl(req)));
 
     res.send(html);
   } catch (error) {
     console.error("Payment initialization error:", error);
     res.status(500).send("Could not initialize payment. Please try again.");
+  }
+});
+
+/**
+ * Route: PayPal page - PayPal REST via COPYandPAY Smart Buttons, per ACI's integration sheet
+ * /paypal runs a DB (intent=capture); /paypal?type=PA runs a PA (intent=authorize)
+ */
+app.get("/paypal", async (req, res) => {
+  try {
+    const paymentType = String(req.query.type || "").toUpperCase() === "PA" ? "PA" : "DB";
+    const checkout = await preparePayPalCheckout(paymentType);
+
+    if (!checkout.id) {
+      console.error("No checkout ID received:", checkout);
+      return res.status(500).send(
+        `Could not initialize PayPal payment. ${checkout.result?.description || 'Unknown error'}`
+      );
+    }
+
+    let html = fs.readFileSync(path.join(__dirname, "public", "paypal.html"), "utf8");
+    html = html.replace(/{{checkoutId}}/g, checkout.id);
+    html = html.replace(
+      /{{widgetIntegrity}}/g,
+      checkout.integrity ? ` integrity="${escapeHtml(checkout.integrity)}" crossorigin="anonymous"` : ""
+    );
+    html = html.replace(/{{wpwlOptionsScript}}/g, paymentType === "PA" ? "paypal-wpwloptions-pa.js" : "paypal-wpwloptions.js");
+    html = html.replace(/{{paymentType}}/g, paymentType);
+    html = html.replace(/{{shopperResultUrl}}/g, escapeHtml(getShopperResultUrl(req)));
+
+    res.send(html);
+  } catch (error) {
+    console.error("PayPal initialization error:", error);
+    res.status(500).send("Could not initialize PayPal payment. Please try again.");
   }
 });
 
