@@ -116,7 +116,7 @@ const PAYPAL_EXAMPLES = [
   {
     key: "paypal-only",
     group: "Funding sources",
-    title: "PayPal button only (hide card and Pay Later)",
+    title: "PayPal button only: one-off payment",
     sheet: `${SHEET}#PayPalRestAPIintegrationsheet-Fundingsources`,
     sheetLabel: "Funding sources",
     currency: "GBP",
@@ -265,6 +265,84 @@ const PAYPAL_EXAMPLES = [
           "disable-funding": "card,paylater,sofort",
           "buyer-country": "NL",
         },
+      },
+    },
+  },
+
+  // ---------- Save PayPal account (billing agreement) ----------
+  // Same PayPal-only button as "PayPal button only: one-off payment", but the checkout sends
+  // createRegistration=true, so ACI asks PayPal for a billing agreement instead of an order.
+  // Checkout fields per example are overrides of the base (amount 293.75, currency, DB, testMode EXTERNAL);
+  // null removes a field. No intent: the sheet's registration samples don't set one.
+  {
+    key: "rg-with-amount",
+    group: "Save PayPal account (billing agreement)",
+    title: "PayPal button only: billing agreement with an amount",
+    sheet: `${SHEET}#PayPalRestAPIintegrationsheet-Registration/BillingagreementcreationwithPSB`,
+    sheetLabel: "Registration/Billing agreement creation with PSB",
+    currency: "GBP",
+    checkout: { paymentType: null, createRegistration: "true" },
+    about: "The sheet's \"Minimal OPP request to create registration\": amount, currency and createRegistration=true, no paymentType. Needs Registration Confirmation Type = External_Confirmation in BIP and Reference Transactions enabled at PayPal.",
+    steps: [
+      "Only the yellow PayPal button shows (same as the one-off example).",
+      "In the popup the shopper logs in and chooses the funding source for future payments, then agrees to the billing agreement instead of clicking Complete Purchase.",
+      "Popup closes and the result page shows the saved PayPal account (registration ID; a BA-... billing agreement at PayPal). Check there whether the 293.75 was also taken: the sheet doesn't say.",
+      "Use \"Charge this saved PayPal account\" on the result page to run a merchant-initiated DB against it (sheet: Send transaction over registration).",
+    ],
+    options: {
+      inlineFlow: ["PAYPAL"],
+      fundingSources: ["PAYPAL"],
+      paypal: {
+        onCancelRedirect: true,
+        sdkParams: { components: "buttons", "disable-funding": "card,paylater,credit" },
+      },
+    },
+  },
+  {
+    key: "rg-standalone",
+    group: "Save PayPal account (billing agreement)",
+    title: "PayPal button only: billing agreement, no payment (standalone)",
+    sheet: `${SHEET}#PayPalRestAPIintegrationsheet-StandaloneregistrationviaCOPYandPAY`,
+    sheetLabel: "Standalone registration via COPYandPAY",
+    currency: "GBP",
+    checkout: { amount: null, currency: null, paymentType: null, createRegistration: "true" },
+    about: "Saves the shopper's PayPal account without taking a payment. The sheet says not to send an amount. Needs External_Confirmation in BIP and Reference Transactions at PayPal.",
+    steps: [
+      "Only the yellow PayPal button shows.",
+      "Sheet workflow: shopper logs in, picks a payment method in their PayPal account and clicks Continue, then can change address and payment method and clicks Agree & Continue.",
+      "Popup closes and the result page shows the registration (the saved PayPal account). No money moves.",
+      "Charge it later from the result page with \"Charge this saved PayPal account\".",
+    ],
+    options: {
+      inlineFlow: ["PAYPAL"],
+      fundingSources: ["PAYPAL"],
+      paypal: {
+        onCancelRedirect: true,
+        sdkParams: { components: "buttons", "disable-funding": "card,paylater,credit" },
+      },
+    },
+  },
+  {
+    key: "rg-zero-pa",
+    group: "Save PayPal account (billing agreement)",
+    title: "PayPal button only: billing agreement with a zero-amount PA",
+    sheet: `${SHEET}#PayPalRestAPIintegrationsheet-ZeroAmountRegistrationwithPAviaCOPYandPAY`,
+    sheetLabel: "Zero Amount Registration with PA via COPYandPAY",
+    currency: "GBP",
+    checkout: { amount: "0.00", paymentType: "PA", createRegistration: "true" },
+    about: "Registration done by a 0.00 PA; later payments are PA or DB referencing the registration. Needs External_Confirmation in BIP and Reference Transactions at PayPal.",
+    steps: [
+      "Only the yellow PayPal button shows.",
+      "Shopper logs in and agrees to the billing agreement; nothing is charged (0.00).",
+      "BIP shows a 0.00 PA plus the registration (sheet: Complete Workflow of Transaction in BIP).",
+      "Charge it later from the result page with \"Charge this saved PayPal account\".",
+    ],
+    options: {
+      inlineFlow: ["PAYPAL"],
+      fundingSources: ["PAYPAL"],
+      paypal: {
+        onCancelRedirect: true,
+        sdkParams: { components: "buttons", "disable-funding": "card,paylater,credit" },
       },
     },
   },

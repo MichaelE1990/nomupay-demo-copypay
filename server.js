@@ -388,14 +388,20 @@ app.get("/payment", async (req, res) => {
  * PayPal examples: minimal checkout per the integration sheet's Smart Buttons samples
  * (entityId, amount, currency, paymentType=DB, testMode=EXTERNAL)
  */
-async function preparePayPalExampleCheckout(currency) {
+async function preparePayPalExampleCheckout(example) {
   const params = {
     entityId: ENTITY_ID,
     amount: "293.75",
-    currency,
+    currency: example.currency,
     paymentType: "DB",
     testMode: "EXTERNAL",
   };
+  // Per-example checkout fields, e.g. createRegistration for billing agreements; null removes a field
+  for (const [key, value] of Object.entries(example.checkout || {})) {
+    if (value === null) delete params[key];
+    else params[key] = value;
+  }
+  const currency = params.currency;
 
   const response = await fetch(`${BASE_URL}v1/checkouts`, {
     method: "POST",
@@ -410,6 +416,55 @@ async function preparePayPalExampleCheckout(currency) {
   console.log("PayPal example checkout:", { currency, id: data.id, resultCode: data.result?.code });
   return { data, params };
 }
+
+function describeExampleCheckout(params) {
+  const amount = params.amount ? `${params.amount} ${params.currency || ""}`.trim() : "No amount";
+  const type = params.paymentType || "no paymentType";
+  return `${amount}, ${type}${params.createRegistration ? ", createRegistration=true" : ""}`;
+}
+
+/**
+ * Route: Charge a saved PayPal account (merchant-initiated DB over the registration).
+ * Sheet: "2. Send transaction over registration" - POST /v1/registrations/{id}/payments
+ */
+app.post("/paypal-examples/charge", express.urlencoded({ extended: false }), async (req, res) => {
+  const registrationId = String(req.body.registrationId || "");
+  const currency = /^[A-Z]{3}$/.test(req.body.currency || "") ? req.body.currency : "GBP";
+  if (!/^[a-f0-9]{32}$/i.test(registrationId)) {
+    return res.status(400).send("Missing or invalid registration ID.");
+  }
+
+  const params = {
+    entityId: ENTITY_ID,
+    paymentBrand: "PAYPAL",
+    paymentType: "DB",
+    amount: "10.00",
+    currency,
+    testMode: "EXTERNAL",
+    merchantTransactionId: crypto.randomUUID(),
+  };
+
+  try {
+    const response = await fetch(`${BASE_URL}v1/registrations/${registrationId}/payments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": `Bearer ${ACCESS_TOKEN}`,
+      },
+      body: new URLSearchParams(params).toString(),
+    });
+    const data = await response.json();
+    console.log("Charge over registration:", { registrationId, id: data.id, resultCode: data.result?.code });
+
+    if (data.id) {
+      return res.redirect(`/paymentresult?resourcePath=${encodeURIComponent(`/v1/payments/${data.id}`)}&charged=${encodeURIComponent(registrationId)}`);
+    }
+    res.status(502).send(`<pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre><p><a href="/paypal-examples">Back to PayPal examples</a></p>`);
+  } catch (error) {
+    console.error("Charge over registration error:", error);
+    res.status(500).send("Could not charge the saved PayPal account.");
+  }
+});
 
 /**
  * Route: wpwlOptions for one PayPal example (external file, since the page CSP blocks inline scripts)
@@ -443,7 +498,7 @@ wpwlOptions.onError = function (error) { logWidgetEvent("onError", error); };
 app.get("/paypal-examples", async (req, res) => {
   try {
     const example = getPayPalExample(String(req.query.example || ""));
-    const { data: checkout, params } = await preparePayPalExampleCheckout(example.currency);
+    const { data: checkout, params } = await preparePayPalExampleCheckout(example);
 
     if (!checkout.id) {
       console.error("No checkout ID received:", checkout);
@@ -521,7 +576,7 @@ app.get("/paypal-examples", async (req, res) => {
           <div class="widget-box">
             <form action="${escapeHtml(getShopperResultUrl(req))}" class="paymentWidgets" data-brands="PAYPAL"></form>
           </div>
-          <p class="note">${escapeHtml(params.amount)} ${escapeHtml(params.currency)} DB on PayPal's sandbox. Each click creates a sandbox order; anything you don't finish stays pending and times out.</p>
+          <p class="note">${escapeHtml(describeExampleCheckout(params))} on PayPal's sandbox. Each click creates a sandbox ${params.createRegistration ? "billing agreement request" : "order"}; anything you don't finish stays pending and times out.</p>
         </div>
 
         <div class="card">
@@ -595,6 +650,11 @@ app.get("/paymentresult", async (req, res) => {
     });
 
     const resultStatus = getResultStatus(status.result?.code);
+    // Standalone registrations come back on .../registration, and the id is the registration itself
+    const isRegistrationResult = /\/registration$/.test(decodeURIComponent(String(resourcePath)));
+    const savedPayPalId = status.paymentBrand === "PAYPAL" && resultStatus === "success"
+      ? (status.registrationId || (isRegistrationResult ? status.id : null))
+      : null;
     const statusLabels = { success: "Successful", pending: "Pending", failed: "Failed" };
 
     // Connector details are only returned when "Show connector details in response" is enabled
@@ -647,11 +707,26 @@ app.get("/paymentresult", async (req, res) => {
             <p><strong>Code:</strong> ${escapeHtml(status.result?.code || 'N/A')}</p>
             ${status.paymentBrand ? `<p><strong>Payment Method:</strong> ${escapeHtml(status.paymentBrand)}</p>` : ''}
             ${status.amount ? `<p><strong>Amount:</strong> ${escapeHtml(status.amount)} ${escapeHtml(status.currency || '')}</p>` : ''}
-            ${status.id ? `<p><strong>Transaction ID:</strong> ${escapeHtml(status.id)}</p>` : ''}
+            ${status.paymentType ? `<p><strong>Payment Type:</strong> ${escapeHtml(status.paymentType)}</p>` : ''}
+            ${status.id ? `<p><strong>${isRegistrationResult ? "Registration ID" : "Transaction ID"}:</strong> ${escapeHtml(status.id)}</p>` : ''}
+            ${status.registrationId ? `<p><strong>Registration ID:</strong> ${escapeHtml(status.registrationId)}</p>` : ''}
+            ${req.query.charged ? `<p><strong>Charged over registration:</strong> ${escapeHtml(req.query.charged)}</p>` : ''}
             ${resultStatus === 'pending' ? `
               <p class="pending-note">This payment is not final yet. The final status comes by webhook: watch for it on the <a href="/webhooks/view">webhook monitor</a>.</p>
             ` : ''}
           </div>
+
+          ${savedPayPalId ? `
+            <div class="result-box">
+              <h2>Saved PayPal account</h2>
+              <p>This PayPal account is saved as registration <strong>${escapeHtml(savedPayPalId)}</strong> (a billing agreement at PayPal). Charge it without the shopper, as a merchant-initiated DB over the registration (sheet: Send transaction over registration).</p>
+              <form method="POST" action="/paypal-examples/charge">
+                <input type="hidden" name="registrationId" value="${escapeHtml(savedPayPalId)}">
+                <input type="hidden" name="currency" value="${escapeHtml(status.currency || "GBP")}">
+                <button type="submit">Charge this saved PayPal account 10.00 ${escapeHtml(status.currency || "GBP")}</button>
+              </form>
+            </div>
+          ` : ''}
 
           ${connectorDetails.length ? `
             <div class="result-box">
@@ -660,7 +735,7 @@ app.get("/paymentresult", async (req, res) => {
             </div>
           ` : ''}
 
-          <p><a href="/payment">Make another payment</a></p>
+          <p><a href="/payment">Make another payment</a> &middot; <a href="/paypal-examples">PayPal examples</a></p>
 
           <details class="debug">
             <summary>Debug Information (click to expand)</summary>
