@@ -277,17 +277,17 @@ const PAYPAL_EXAMPLES = [
   {
     key: "rg-with-amount",
     group: "Save PayPal account (billing agreement)",
-    title: "PayPal button only: billing agreement with an amount",
+    title: "PayPal button only: billing agreement, amount shown but not charged",
     sheet: `${SHEET}#PayPalRestAPIintegrationsheet-Registration/BillingagreementcreationwithPSB`,
     sheetLabel: "Registration/Billing agreement creation with PSB",
     currency: "GBP",
     checkout: { paymentType: null, createRegistration: "true" },
-    about: "The sheet's \"Minimal OPP request to create registration\": amount, currency and createRegistration=true, no paymentType. Needs Registration Confirmation Type = External_Confirmation in BIP and Reference Transactions enabled at PayPal.",
+    about: "The sheet's \"Minimal OPP request to create registration\": amount, currency and createRegistration=true, no paymentType. Tested 9 Nov 2026: ACI runs this as a standalone registration (VA.RG, then VA.CF when the shopper agrees). The amount goes on the RG but nothing is charged.",
     steps: [
       "Only the yellow PayPal button shows (same as the one-off example).",
-      "In the popup the shopper logs in and chooses the funding source for future payments, then agrees to the billing agreement instead of clicking Complete Purchase.",
-      "Popup closes and the result page shows the saved PayPal account (registration ID; a BA-... billing agreement at PayPal). Check there whether the 293.75 was also taken: the sheet doesn't say.",
-      "Use \"Charge this saved PayPal account\" on the result page to run a merchant-initiated DB against it (sheet: Send transaction over registration).",
+      "In the popup the shopper logs in, chooses the funding source for future payments and agrees to the billing agreement.",
+      "BIP shows an RG and a CF (confirmation); the result page shows the registration ID (a B-... billing agreement at PayPal). No payment.",
+      "To take the first payment, charge over the registration: \"Charge this saved PayPal account\" on the result page (sheet: Send transaction over registration). That's how pay-now-and-save works for PayPal on ACI: two transactions.",
     ],
     options: {
       inlineFlow: ["PAYPAL"],

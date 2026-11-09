@@ -430,6 +430,7 @@ function describeExampleCheckout(params) {
 app.post("/paypal-examples/charge", express.urlencoded({ extended: false }), async (req, res) => {
   const registrationId = String(req.body.registrationId || "");
   const currency = /^[A-Z]{3}$/.test(req.body.currency || "") ? req.body.currency : "GBP";
+  const amount = /^\d{1,6}\.\d{2}$/.test(req.body.amount || "") ? req.body.amount : "10.00";
   if (!/^[a-f0-9]{32}$/i.test(registrationId)) {
     return res.status(400).send("Missing or invalid registration ID.");
   }
@@ -438,7 +439,7 @@ app.post("/paypal-examples/charge", express.urlencoded({ extended: false }), asy
     entityId: ENTITY_ID,
     paymentBrand: "PAYPAL",
     paymentType: "DB",
-    amount: "10.00",
+    amount,
     currency,
     testMode: "EXTERNAL",
     merchantTransactionId: crypto.randomUUID(),
@@ -723,7 +724,8 @@ app.get("/paymentresult", async (req, res) => {
               <form method="POST" action="/paypal-examples/charge">
                 <input type="hidden" name="registrationId" value="${escapeHtml(savedPayPalId)}">
                 <input type="hidden" name="currency" value="${escapeHtml(status.currency || "GBP")}">
-                <button type="submit">Charge this saved PayPal account 10.00 ${escapeHtml(status.currency || "GBP")}</button>
+                <label>Amount (${escapeHtml(status.currency || "GBP")}) <input name="amount" value="293.75" pattern="\\d{1,6}\\.\\d{2}" size="10" required></label>
+                <button type="submit">Charge this saved PayPal account</button>
               </form>
             </div>
           ` : ''}
