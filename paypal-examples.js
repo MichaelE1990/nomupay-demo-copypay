@@ -275,6 +275,30 @@ const PAYPAL_EXAMPLES = [
   // Checkout fields per example are overrides of the base (amount 293.75, currency, DB, testMode EXTERNAL);
   // null removes a field. No intent: the sheet's registration samples don't set one.
   {
+    key: "pay-and-save",
+    group: "Save PayPal account (billing agreement)",
+    title: "PayPal button only: pay and save in one checkout (DB + createRegistration)",
+    sheet: `${SHEET}#PayPalRestAPIintegrationsheet-Recurringandone-clickworkflow`,
+    sheetLabel: "Recurring and one-click workflow (\"storing his PayPal account during payment\")",
+    currency: "GBP",
+    checkout: { createRegistration: "true" },
+    about: "What merchants usually do for cards: paymentType=DB plus createRegistration=true, so one checkout takes the payment and saves the account. The sheet lists \"storing his PayPal account during payment\" as supported but has no PayPal sample for this exact request, so this is the test.",
+    steps: [
+      "Only the yellow PayPal button shows.",
+      "Shopper logs in and agrees to the billing agreement (and the payment).",
+      "Check BIP for the transactions: if it works as for cards you'll see the registration and the 293.75 DB; if you only see RG + CF, ACI saves without paying for PayPal.",
+      "The result page shows the payment and a registration ID if both were created.",
+    ],
+    options: {
+      inlineFlow: ["PAYPAL"],
+      fundingSources: ["PAYPAL"],
+      paypal: {
+        onCancelRedirect: true,
+        sdkParams: { components: "buttons", "disable-funding": "card,paylater,credit" },
+      },
+    },
+  },
+  {
     key: "rg-with-amount",
     group: "Save PayPal account (billing agreement)",
     title: "PayPal button only: billing agreement, amount shown but not charged",
@@ -287,7 +311,7 @@ const PAYPAL_EXAMPLES = [
       "Only the yellow PayPal button shows (same as the one-off example).",
       "In the popup the shopper logs in, chooses the funding source for future payments and agrees to the billing agreement.",
       "BIP shows an RG and a CF (confirmation); the result page shows the registration ID (a B-... billing agreement at PayPal). No payment.",
-      "To take the first payment, charge over the registration: \"Charge this saved PayPal account\" on the result page (sheet: Send transaction over registration). That's how pay-now-and-save works for PayPal on ACI: two transactions.",
+      "Later payments are merchant-initiated: the merchant's server charges over the registration (see the merchant back office, linked from the result page for testing).",
     ],
     options: {
       inlineFlow: ["PAYPAL"],
@@ -311,7 +335,7 @@ const PAYPAL_EXAMPLES = [
       "Only the yellow PayPal button shows.",
       "Sheet workflow: shopper logs in, picks a payment method in their PayPal account and clicks Continue, then can change address and payment method and clicks Agree & Continue.",
       "Popup closes and the result page shows the registration (the saved PayPal account). No money moves.",
-      "Charge it later from the result page with \"Charge this saved PayPal account\".",
+      "Later payments are merchant-initiated: the merchant's server charges over the registration (see the merchant back office, linked from the result page for testing).",
     ],
     options: {
       inlineFlow: ["PAYPAL"],
@@ -335,7 +359,7 @@ const PAYPAL_EXAMPLES = [
       "Only the yellow PayPal button shows.",
       "Shopper logs in and agrees to the billing agreement; nothing is charged (0.00).",
       "BIP shows a 0.00 PA plus the registration (sheet: Complete Workflow of Transaction in BIP).",
-      "Charge it later from the result page with \"Charge this saved PayPal account\".",
+      "Later payments are merchant-initiated: the merchant's server charges over the registration (see the merchant back office, linked from the result page for testing).",
     ],
     options: {
       inlineFlow: ["PAYPAL"],

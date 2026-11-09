@@ -424,26 +424,94 @@ function describeExampleCheckout(params) {
 }
 
 /**
- * Route: Charge a saved PayPal account (merchant-initiated DB over the registration).
+ * Merchant back office (demo): charge a saved PayPal account without the shopper.
  * Sheet: "2. Send transaction over registration" - POST /v1/registrations/{id}/payments
  */
-app.post("/paypal-examples/charge", express.urlencoded({ extended: false }), async (req, res) => {
+function renderMerchantPage({ registrationId = "", amount = "293.75", currency = "GBP", paymentType = "DB", sent = null, result = null, error = null }) {
+  const options = (values, selected) => values.map((v) => `<option${v === selected ? " selected" : ""}>${v}</option>`).join("");
+  const resultStatus = result ? getResultStatus(result.result?.code) : null;
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Merchant back office</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #111827; background: #f3f4f6; }
+      header { background: #111827; color: #fff; padding: 14px 24px; font-weight: 600; }
+      header span { font-weight: 400; color: #9ca3af; margin-left: 8px; font-size: 14px; }
+      main { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
+      .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
+      h1 { font-size: 20px; margin: 0 0 6px; } h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; margin: 0 0 12px; }
+      p { color: #4b5563; margin: 0 0 10px; line-height: 1.45; }
+      label { display: block; font-size: 13px; font-weight: 600; margin: 10px 0 4px; }
+      input, select { width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: inherit; }
+      .row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+      button { margin-top: 16px; background: #4f46e5; color: #fff; border: 0; border-radius: 6px; padding: 10px 16px; font-size: 14px; font-weight: 600; cursor: pointer; }
+      pre { background: #111827; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; white-space: pre-wrap; word-break: break-word; margin: 0; }
+      .success { color: #15803d; } .pending { color: #b45309; } .failed { color: #b91c1c; }
+      a { color: #4f46e5; }
+      @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <header>Merchant back office <span>demo only: what the merchant's server does, not the shopper</span></header>
+    <main>
+      <div class="card">
+        <h1>Charge a saved PayPal account</h1>
+        <p>A merchant-initiated payment over a PayPal registration (billing agreement), e.g. a subscription renewal. The shopper isn't involved: the merchant's server sends this.</p>
+        <form method="POST" action="/merchant/charge">
+          <label for="registrationId">Registration ID</label>
+          <input id="registrationId" name="registrationId" value="${escapeHtml(registrationId)}" placeholder="32-character registration ID" required pattern="[a-fA-F0-9]{32}">
+          <div class="row">
+            <div><label for="amount">Amount</label><input id="amount" name="amount" value="${escapeHtml(amount)}" required pattern="\\d{1,6}\\.\\d{2}"></div>
+            <div><label for="currency">Currency</label><select id="currency" name="currency">${options(["GBP", "EUR", "USD"], currency)}</select></div>
+            <div><label for="paymentType">Payment type</label><select id="paymentType" name="paymentType">${options(["DB", "PA"], paymentType)}</select></div>
+          </div>
+          <button type="submit">Send payment over registration</button>
+        </form>
+      </div>
+      ${sent ? `<div class="card"><h2>Request sent</h2><pre>${escapeHtml(sent)}</pre></div>` : ""}
+      ${result ? `<div class="card"><h2>Response</h2>
+        <p><strong class="${resultStatus}">${escapeHtml(result.result?.code || "")}</strong> ${escapeHtml(result.result?.description || "")}</p>
+        ${result.id ? `<p><strong>Transaction ID:</strong> ${escapeHtml(result.id)}</p>` : ""}
+        ${result.descriptor ? `<p><strong>Descriptor:</strong> ${escapeHtml(result.descriptor)}</p>` : ""}
+        <details><summary>Full response</summary><pre>${escapeHtml(JSON.stringify(result, null, 2))}</pre></details>
+      </div>` : ""}
+      ${error ? `<div class="card"><p class="failed">${escapeHtml(error)}</p></div>` : ""}
+      <p><a href="/paypal-examples">PayPal examples</a> &middot; <a href="/payment">Checkout</a></p>
+    </main>
+  </body>
+</html>`;
+}
+
+app.get("/merchant", (req, res) => {
+  const registrationId = /^[a-f0-9]{32}$/i.test(req.query.registrationId || "") ? req.query.registrationId : "";
+  const currency = ["GBP", "EUR", "USD"].includes(req.query.currency) ? req.query.currency : "GBP";
+  res.send(renderMerchantPage({ registrationId, currency }));
+});
+
+app.post("/merchant/charge", express.urlencoded({ extended: false }), async (req, res) => {
   const registrationId = String(req.body.registrationId || "");
-  const currency = /^[A-Z]{3}$/.test(req.body.currency || "") ? req.body.currency : "GBP";
+  const currency = ["GBP", "EUR", "USD"].includes(req.body.currency) ? req.body.currency : "GBP";
   const amount = /^\d{1,6}\.\d{2}$/.test(req.body.amount || "") ? req.body.amount : "10.00";
+  const paymentType = req.body.paymentType === "PA" ? "PA" : "DB";
   if (!/^[a-f0-9]{32}$/i.test(registrationId)) {
-    return res.status(400).send("Missing or invalid registration ID.");
+    return res.status(400).send(renderMerchantPage({ registrationId: "", amount, currency, paymentType, error: "Enter a valid 32-character registration ID." }));
   }
 
   const params = {
     entityId: ENTITY_ID,
     paymentBrand: "PAYPAL",
-    paymentType: "DB",
+    paymentType,
     amount,
     currency,
     testMode: "EXTERNAL",
     merchantTransactionId: crypto.randomUUID(),
   };
+  const sent = `POST /v1/registrations/${registrationId}/payments\n\n` +
+    Object.entries({ ...params, entityId: `${String(ENTITY_ID).slice(0, 8)}… (Demo Channel)` }).map(([k, v]) => `${k}=${v}`).join("\n");
 
   try {
     const response = await fetch(`${BASE_URL}v1/registrations/${registrationId}/payments`, {
@@ -454,16 +522,12 @@ app.post("/paypal-examples/charge", express.urlencoded({ extended: false }), asy
       },
       body: new URLSearchParams(params).toString(),
     });
-    const data = await response.json();
-    console.log("Charge over registration:", { registrationId, id: data.id, resultCode: data.result?.code });
-
-    if (data.id) {
-      return res.redirect(`/paymentresult?resourcePath=${encodeURIComponent(`/v1/payments/${data.id}`)}&charged=${encodeURIComponent(registrationId)}`);
-    }
-    res.status(502).send(`<pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre><p><a href="/paypal-examples">Back to PayPal examples</a></p>`);
+    const result = await response.json();
+    console.log("Payment over registration:", { registrationId, id: result.id, resultCode: result.result?.code });
+    res.send(renderMerchantPage({ registrationId, amount, currency, paymentType, sent, result }));
   } catch (error) {
-    console.error("Charge over registration error:", error);
-    res.status(500).send("Could not charge the saved PayPal account.");
+    console.error("Payment over registration error:", error);
+    res.status(500).send(renderMerchantPage({ registrationId, amount, currency, paymentType, sent, error: "Could not reach the gateway." }));
   }
 });
 
@@ -711,7 +775,6 @@ app.get("/paymentresult", async (req, res) => {
             ${status.paymentType ? `<p><strong>Payment Type:</strong> ${escapeHtml(status.paymentType)}</p>` : ''}
             ${status.id ? `<p><strong>${isRegistrationResult ? "Registration ID" : "Transaction ID"}:</strong> ${escapeHtml(status.id)}</p>` : ''}
             ${status.registrationId ? `<p><strong>Registration ID:</strong> ${escapeHtml(status.registrationId)}</p>` : ''}
-            ${req.query.charged ? `<p><strong>Charged over registration:</strong> ${escapeHtml(req.query.charged)}</p>` : ''}
             ${resultStatus === 'pending' ? `
               <p class="pending-note">This payment is not final yet. The final status comes by webhook: watch for it on the <a href="/webhooks/view">webhook monitor</a>.</p>
             ` : ''}
@@ -719,14 +782,7 @@ app.get("/paymentresult", async (req, res) => {
 
           ${savedPayPalId ? `
             <div class="result-box">
-              <h2>Saved PayPal account</h2>
-              <p>This PayPal account is saved as registration <strong>${escapeHtml(savedPayPalId)}</strong> (a billing agreement at PayPal). Charge it without the shopper, as a merchant-initiated DB over the registration (sheet: Send transaction over registration).</p>
-              <form method="POST" action="/paypal-examples/charge">
-                <input type="hidden" name="registrationId" value="${escapeHtml(savedPayPalId)}">
-                <input type="hidden" name="currency" value="${escapeHtml(status.currency || "GBP")}">
-                <label>Amount (${escapeHtml(status.currency || "GBP")}) <input name="amount" value="293.75" pattern="\\d{1,6}\\.\\d{2}" size="10" required></label>
-                <button type="submit">Charge this saved PayPal account</button>
-              </form>
+              <p><strong>Your PayPal account is saved</strong> for future payments to this merchant.</p>
             </div>
           ` : ''}
 
@@ -738,6 +794,7 @@ app.get("/paymentresult", async (req, res) => {
           ` : ''}
 
           <p><a href="/payment">Make another payment</a> &middot; <a href="/paypal-examples">PayPal examples</a></p>
+          ${savedPayPalId ? `<p style="font-size:13px;color:#6b7280">Testing only (not something the shopper sees): <a href="/merchant?registrationId=${encodeURIComponent(savedPayPalId)}&currency=${encodeURIComponent(status.currency || "GBP")}">charge this registration in the merchant back office &rarr;</a></p>` : ''}
 
           <details class="debug">
             <summary>Debug Information (click to expand)</summary>
